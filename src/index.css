@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+* {
+  box-sizing: border-box;
+}
+.truncate-two-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Giới hạn số dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* body {
+    @apply font-roboto;
+} */
+/* Custom animation đơn giản */
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 1.2s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0%);
+      opacity: 1;
+    }
+  }
+}
+@tailwind utilities;

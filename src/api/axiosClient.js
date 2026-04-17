@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:3000/api", // Tạm trỏ thẳng vào User Service ở cổng 3001 thay vì Gateway (3000)
+  baseURL: `${API_URL}/api`, // Tạm trỏ thẳng vào User Service ở cổng 3001 thay vì Gateway (3000)
   headers: {
     "Content-Type": "application/json",
   },
@@ -17,7 +17,7 @@ axiosClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosClient.interceptors.response.use(
@@ -29,7 +29,7 @@ axiosClient.interceptors.response.use(
   },
   (error) => {
     throw error;
-  }
+  },
 );
 
 export default axiosClient;

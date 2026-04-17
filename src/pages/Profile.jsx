@@ -46,8 +46,8 @@ export default function Profile() {
 
     try {
       const id = user._id || user.id;
-      const BASE_URL =
-        import.meta.env.VITE_API_URL || "http://18.143.172.207:3000";
+      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
       const res = await fetch(`${BASE_URL}/api/users/${id}`, {
         method: "PUT",
         headers: {

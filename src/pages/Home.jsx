@@ -95,8 +95,8 @@ export default function Home() {
     const user = JSON.parse(storedUser);
 
     try {
-      const BASE_URL =
-        import.meta.env.VITE_API_URL || "http://18.143.172.207:3000";
+      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
       const res = await fetch(`${BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
@@ -132,8 +132,8 @@ export default function Home() {
 
   useEffect(() => {
     // Fetch products from API Gateway
-    const BASE_URL =
-      import.meta.env.VITE_API_URL || "http://18.143.172.207:3000";
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
     fetch(`${BASE_URL}/api/products`)
       .then((res) => res.json())
       .then((data) => {

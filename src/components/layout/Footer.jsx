@@ -23,9 +23,10 @@ export default function Footer() {
           </p>
 
           {/* BADGES */}
-          <div className="flex gap-2 mt-3">
-            <img src="/images/bct.png" alt="bct" className="h-10" />
-            <img src="/images/dmca.png" alt="dmca" className="h-10" />
+          <div className="flex gap-2 mt-3 text-xs text-gray-400">
+            {/* <img src="/images/bct.png" alt="bct" className="h-10" />
+            <img src="/images/dmca.png" alt="dmca" className="h-10" /> */}
+            <p>Đã Đăng Ký Bộ Công Thương</p>
           </div>
         </div>
 
@@ -88,14 +89,14 @@ export default function Footer() {
           {/* BANNERS */}
           <div className="space-y-3">
             <img
-              src="/images/banner-footer-1.jpg"
-              alt=""
-              className="rounded-lg"
+              src="https://theme.hstatic.net/1000213518/1001329030/14/babannerrighimg1_grande.png?v=770"
+              alt="banner 1"
+              className="rounded-lg h-24 object-cover w-full"
             />
             <img
-              src="/images/banner-footer-2.jpg"
-              alt=""
-              className="rounded-lg"
+              src="https://theme.hstatic.net/1000213518/1001329030/14/babannerrighimg2_grande.png?v=770"
+              alt="banner 2"
+              className="rounded-lg h-24 object-cover w-full"
             />
           </div>
         </div>

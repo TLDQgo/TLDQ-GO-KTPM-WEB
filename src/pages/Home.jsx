@@ -95,7 +95,9 @@ export default function Home() {
     const user = JSON.parse(storedUser);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+      const BASE_URL =
+        import.meta.env.VITE_API_URL || "http://18.143.172.207:3000";
+      const res = await fetch(`${BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +132,9 @@ export default function Home() {
 
   useEffect(() => {
     // Fetch products from API Gateway
-    fetch(`${import.meta.env.VITE_API_URL}/api/products`)
+    const BASE_URL =
+      import.meta.env.VITE_API_URL || "http://18.143.172.207:3000";
+    fetch(`${BASE_URL}/api/products`)
       .then((res) => res.json())
       .then((data) => {
         if (data && data.data) {

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: `${API_URL}/api`, // Tạm trỏ thẳng vào User Service ở cổng 3001 thay vì Gateway (3000)
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },

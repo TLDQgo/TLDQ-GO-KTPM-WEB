@@ -46,16 +46,19 @@ export default function Profile() {
 
     try {
       const id = user._id || user.id;
-      const res = await fetch(`${API_URL}/api/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/users/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            email: user.email, // keep email immutable
+          }),
         },
-        body: JSON.stringify({
-          ...formData,
-          email: user.email, // keep email immutable
-        }),
-      });
+      );
 
       const data = await res.json();
       if (res.ok) {

@@ -95,7 +95,7 @@ export default function Home() {
     const user = JSON.parse(storedUser);
 
     try {
-      const res = await fetch(`${API_URL}/api/orders`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +130,7 @@ export default function Home() {
 
   useEffect(() => {
     // Fetch products from API Gateway
-    fetch(`${API_URL}/api/products`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/products`)
       .then((res) => res.json())
       .then((data) => {
         if (data && data.data) {

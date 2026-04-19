@@ -5,6 +5,8 @@ import Register from "../pages/Register";
 import Login from "../pages/Login";
 
 import Profile from "../pages/Profile";
+import RegisterSeller from "../pages/RegisterSeller";
+import LoginSeller from "../pages/LoginSeller";
 
 export default function RoutesUser() {
   return (
@@ -30,6 +32,22 @@ export default function RoutesUser() {
         element={
           <UserLayout>
             <Login />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/register-seller"
+        element={
+          <UserLayout>
+            <RegisterSeller />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/login-seller"
+        element={
+          <UserLayout>
+            <LoginSeller />
           </UserLayout>
         }
       />

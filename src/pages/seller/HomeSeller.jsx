@@ -1,5 +1,5 @@
 import React from "react";
-
+import { Link } from "react-router-dom";
 export default function HomeSeller() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -91,13 +91,13 @@ export default function HomeSeller() {
             Quick Actions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <Link to="/seller/them-san-pham" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-center block">
               Add New Product
-            </button>
-            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            </Link>
+            <Link to="/seller/orders" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-center block">
               View All Orders
-            </button>
-            <button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+            </Link>
+            <button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-center">
               Manage Inventory
             </button>
           </div>

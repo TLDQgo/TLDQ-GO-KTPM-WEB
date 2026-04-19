@@ -1,37 +1,57 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import authApi from "../api/authApi";
+import useAuthStore from "../store/useAuthStore";
 
 export default function LoginSeller() {
   const navigate = useNavigate();
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    setErrorMsg("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
 
-    console.log(form);
+    try {
+      const res = await authApi.loginSeller(form);
+      const { token, user } = res;
 
-    // demo login
-    alert("Đăng nhập thành công (demo)");
+      // Kiểm tra role phải là 'seller'
+      if (user?.role !== "seller") {
+        setErrorMsg("Tài khoản này không phải Seller. Vui lòng dùng trang đăng nhập khác.");
+        return;
+      }
 
-    // lưu fake user
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ email: form.email, role: "seller" }),
-    );
+      // Lưu token riêng, user qua store (store tự sync localStorage)
+      localStorage.setItem("token", token);
+      setUser(user);
 
-    // trigger header update
-    window.dispatchEvent(new Event("auth-change"));
-
-    navigate("/seller");
+      window.dispatchEvent(new Event("auth-change"));
+      navigate("/seller");
+    } catch (error) {
+      console.error(error);
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại Email và Mật khẩu.";
+      setErrorMsg(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,6 +72,13 @@ export default function LoginSeller() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* ERROR */}
+            {errorMsg && (
+              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-200">
+                {errorMsg}
+              </div>
+            )}
+
             {/* EMAIL */}
             <input
               type="email"
@@ -77,9 +104,10 @@ export default function LoginSeller() {
             {/* SUBMIT */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Đăng nhập
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
             {/* LINK REGISTER */}

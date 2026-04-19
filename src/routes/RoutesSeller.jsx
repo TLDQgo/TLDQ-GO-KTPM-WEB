@@ -3,6 +3,7 @@ import { SellerLayout } from "./DashBoardLayout";
 import HomeSeller from "../pages/seller/HomeSeller";
 import ProductManagementSeller from "../pages/seller/ProductManagementSeller";
 import ProductNewAddPage from "../pages/seller/ProductNewAddPage";
+import OrderManagementSeller from "../pages/seller/OrderManagementSeller";
 
 export default function RoutesSeller() {
   return (
@@ -28,6 +29,14 @@ export default function RoutesSeller() {
         element={
           <SellerLayout>
             <ProductNewAddPage />
+          </SellerLayout>
+        }
+      />
+      <Route
+        path="/seller/orders"
+        element={
+          <SellerLayout>
+            <OrderManagementSeller />
           </SellerLayout>
         }
       />

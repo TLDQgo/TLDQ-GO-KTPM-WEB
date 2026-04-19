@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../../store/useAuthStore";
 import {
   Home,
   Package,
@@ -14,10 +16,18 @@ import {
 } from "lucide-react";
 
 export default function SidebarSeller() {
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
   const [activeItem, setActiveItem] = useState("home");
 
   const handleItemClick = (item) => {
     setActiveItem(item);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.dispatchEvent(new Event("auth-change"));
+    navigate("/login-seller");
   };
 
   return (
@@ -153,12 +163,13 @@ export default function SidebarSeller() {
         </Link>
 
         {/* LOGOUT */}
-        <Link to="/login-seller">
-          <li className="flex items-center gap-3 p-2 mt-4 text-red-500 rounded-md cursor-pointer hover:bg-red-50">
-            <LogOut size={18} />
-            <span>Đăng xuất</span>
-          </li>
-        </Link>
+        <li
+          className="flex items-center gap-3 p-2 mt-4 text-red-500 rounded-md cursor-pointer hover:bg-red-50"
+          onClick={handleLogout}
+        >
+          <LogOut size={18} />
+          <span>Đăng xuất</span>
+        </li>
       </ul>
     </div>
   );

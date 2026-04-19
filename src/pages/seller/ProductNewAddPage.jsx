@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import categoryApi from "../../api/categoryApi";
 import productApi from "../../api/productApi";
+import useAuthStore from "../../store/useAuthStore";
 export default function ProductNewAddPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false); // 🔥 state loading
+  const user = useAuthStore((s) => s.user);
+  const sellerId = user?._id;
 
   const [form, setForm] = useState({
     name: "",
@@ -54,7 +57,13 @@ export default function ProductNewAddPage() {
       formData.append("price", form.price);
       formData.append("stock_quantity", form.stock);
       formData.append("category_id", form.category_id);
-      formData.append("seller_id", "123");
+      
+      if (!sellerId) {
+        alert("❌ Lỗi: Bạn chưa đăng nhập hoặc không có quyền Seller.");
+        setLoading(false);
+        return;
+      }
+      formData.append("seller_id", sellerId);
       formData.append("description", form.description);
 
       if (form.images && form.images.length > 0) {

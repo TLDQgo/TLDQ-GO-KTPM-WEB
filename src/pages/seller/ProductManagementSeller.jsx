@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
 import productApi from "../../api/productApi";
+import useAuthStore from "../../store/useAuthStore";
+
 export default function ProductManagementSeller() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const user = useAuthStore((s) => s.user);
+  const sellerId = user?._id;
 
   // CALL API
   const fetchProducts = async (pageNumber = 1) => {
+    if (!sellerId) return;
     try {
-      const res = await productApi.getProductsWithPage(pageNumber);
+      const res = await productApi.getProductsBySeller(sellerId, pageNumber);
 
       console.log("API response:", res);
 
@@ -21,7 +26,7 @@ export default function ProductManagementSeller() {
 
   useEffect(() => {
     fetchProducts(page);
-  }, [page]);
+  }, [page, sellerId]);
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xoá sản phẩm này?")) return;
 

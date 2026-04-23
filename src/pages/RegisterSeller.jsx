@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import authApi from "../api/authApi";
 
 export default function RegisterSeller() {
   const navigate = useNavigate();
@@ -18,18 +20,27 @@ export default function RegisterSeller() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      alert("Mật khẩu không khớp!");
+      toast.error("Mật khẩu không khớp!");
       return;
     }
 
-    console.log(form);
-    alert("Đăng ký thành công!");
+    try {
+      const res = await authApi.registerSeller({
+        email: form.email,
+        password: form.password,
+        phone: form.phone,
+        full_name: form.shopName,
+      });
 
-    navigate("/login-seller");
+      toast.success(res?.message || "Đăng ký seller thành công!");
+      navigate("/login-seller");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Đăng ký seller thất bại");
+    }
   };
 
   return (

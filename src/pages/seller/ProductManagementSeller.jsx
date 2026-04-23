@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import productApi from "../../api/productApi";
 import useAuthStore from "../../store/useAuthStore";
+import Modal from "../../components/common/Modal";
 
 export default function ProductManagementSeller() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    price: "",
+    stock_quantity: "",
+    description: "",
+  });
   const user = useAuthStore((s) => s.user);
   const sellerId = user?._id;
 
@@ -42,6 +51,55 @@ export default function ProductManagementSeller() {
       alert("❌ Xoá thất bại");
     }
   };
+
+  const openEditModal = (item) => {
+    setEditingProduct(item);
+    setEditForm({
+      name: item.name || "",
+      price: item.price ?? "",
+      stock_quantity: item.stock_quantity ?? "",
+      description: item.description || "",
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct?._id) return;
+
+    try {
+      const payload = {
+        name: editForm.name,
+        price: Number(editForm.price) || 0,
+        stock_quantity: Number(editForm.stock_quantity) || 0,
+        description: editForm.description,
+      };
+
+      const res = await productApi.update(editingProduct._id, payload);
+      const updatedProduct = res?.data || payload;
+
+      setProducts((prev) =>
+        prev.map((item) =>
+          item._id === editingProduct._id
+            ? { ...item, ...updatedProduct, category_id: item.category_id }
+            : item,
+        ),
+      );
+
+      setIsEditOpen(false);
+      setEditingProduct(null);
+      alert("✅ Cập nhật sản phẩm thành công");
+    } catch (error) {
+      console.error("Lỗi cập nhật sản phẩm:", error);
+      alert("❌ Cập nhật sản phẩm thất bại");
+    }
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* HEADER */}
@@ -101,8 +159,21 @@ export default function ProductManagementSeller() {
 
                 <td className="p-3">
                   <div className="flex justify-center gap-2">
-                    <button className="px-2 py-1 border rounded">✏️</button>
-                    <button className="px-2 py-1 border rounded">👁</button>
+                    <button
+                      onClick={() => openEditModal(item)}
+                      className="px-2 py-1 border rounded"
+                    >
+                      ✏️
+                    </button>
+                    <a
+                      href={`/?productId=${item._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 border rounded inline-flex items-center justify-center"
+                      title="Xem bên phía user"
+                    >
+                      👁
+                    </a>
                     <button
                       onClick={() => handleDelete(item._id)}
                       className="px-2 py-1 border text-red-500 rounded hover:bg-red-50"
@@ -133,9 +204,8 @@ export default function ProductManagementSeller() {
           <button
             key={i}
             onClick={() => setPage(i + 1)}
-            className={`px-3 py-1 border rounded ${
-              page === i + 1 ? "bg-red-500 text-white" : ""
-            }`}
+            className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-red-500 text-white" : ""
+              }`}
           >
             {i + 1}
           </button>
@@ -150,6 +220,80 @@ export default function ProductManagementSeller() {
           Next
         </button>
       </div>
+
+      <Modal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title="Cập nhật sản phẩm"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleUpdateProduct} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium">Tên sản phẩm</label>
+            <input
+              type="text"
+              name="name"
+              value={editForm.name}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">Giá</label>
+            <input
+              type="number"
+              min="0"
+              name="price"
+              value={editForm.price}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">Số lượng</label>
+            <input
+              type="number"
+              min="0"
+              name="stock_quantity"
+              value={editForm.stock_quantity}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">Mô tả</label>
+            <textarea
+              name="description"
+              value={editForm.description}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded"
+              rows={4}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsEditOpen(false)}
+              className="px-4 py-2 border rounded"
+            >
+              Huỷ
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Lưu thay đổi
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
+import { useSearchParams } from "react-router-dom";
 
 const categories = [
   {
@@ -39,6 +40,7 @@ const categories = [
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
@@ -150,6 +152,30 @@ export default function Home() {
       sessionStorage.removeItem("scrollPosition"); // Xóa vị trí cuộn sau khi đã sử dụng
     }
   }, []);
+
+  useEffect(() => {
+    const productIdFromQuery = searchParams.get("productId");
+    if (!productIdFromQuery || products.length === 0) return;
+
+    const foundProduct = products.find(
+      (p) => String(p._id) === String(productIdFromQuery),
+    );
+
+    if (foundProduct) {
+      setSelectedProductForDetails(foundProduct);
+    }
+  }, [products, searchParams]);
+
+  const closeProductDetails = () => {
+    setSelectedProductForDetails(null);
+
+    if (searchParams.get("productId")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("productId");
+      setSearchParams(nextParams);
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -417,7 +443,7 @@ export default function Home() {
       {/* Product Details Modal */}
       <Modal
         isOpen={!!selectedProductForDetails}
-        onClose={() => setSelectedProductForDetails(null)}
+        onClose={closeProductDetails}
         title="Chi tiết sản phẩm"
         maxWidth="max-w-2xl"
       >
@@ -473,7 +499,7 @@ export default function Home() {
 
               <button
                 onClick={(e) => {
-                  setSelectedProductForDetails(null);
+                  closeProductDetails();
                   handleOrder(selectedProductForDetails, e);
                 }}
                 className="w-full py-3 mt-4 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"

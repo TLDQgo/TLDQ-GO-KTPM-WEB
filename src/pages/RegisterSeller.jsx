@@ -1,19 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import authApi from "../api/authApi";
+import useAuthStore from "../store/useAuthStore";
 
 export default function RegisterSeller() {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const isCustomerLoggedIn = user?.role === "customer";
 
   const [form, setForm] = useState({
-    shopName: "",
-    email: "",
-    phone: "",
+    shopName: user?.full_name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
     address: "",
     password: "",
     confirmPassword: "",
   });
+
+  useEffect(() => {
+    if (!isCustomerLoggedIn) return;
+
+    setForm((prev) => ({
+      ...prev,
+      shopName: user?.full_name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    }));
+  }, [isCustomerLoggedIn, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,12 +38,31 @@ export default function RegisterSeller() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      toast.error("Mật khẩu không khớp!");
-      return;
-    }
-
     try {
+      if (isCustomerLoggedIn) {
+        const res = await authApi.upgradeSeller({
+          phone: form.phone,
+          full_name: form.shopName,
+        });
+
+        if (res?.token) {
+          localStorage.setItem("token", res.token);
+        }
+        if (res?.user) {
+          setUser(res.user);
+        }
+        window.dispatchEvent(new Event("auth-change"));
+
+        toast.success(res?.message || "Nâng cấp tài khoản seller thành công!");
+        navigate("/seller");
+        return;
+      }
+
+      if (form.password !== form.confirmPassword) {
+        toast.error("Mật khẩu không khớp!");
+        return;
+      }
+
       const res = await authApi.registerSeller({
         email: form.email,
         password: form.password,
@@ -39,7 +73,12 @@ export default function RegisterSeller() {
       toast.success(res?.message || "Đăng ký seller thành công!");
       navigate("/login-seller");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Đăng ký seller thất bại");
+      toast.error(
+        error?.response?.data?.message ||
+          (isCustomerLoggedIn
+            ? "Nâng cấp tài khoản seller thất bại"
+            : "Đăng ký seller thất bại"),
+      );
     }
   };
 
@@ -57,8 +96,15 @@ export default function RegisterSeller() {
         {/* RIGHT SIDE FORM */}
         <div className="p-8">
           <h1 className="text-2xl font-semibold mb-6 text-center">
-            Đăng ký Seller
+            {isCustomerLoggedIn ? "Nâng cấp tài khoản Seller" : "Đăng ký Seller"}
           </h1>
+
+          {isCustomerLoggedIn && (
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              Bạn đang đăng nhập với tài khoản customer. Chỉ cần cập nhật thông
+              tin bên dưới để nâng cấp trực tiếp lên seller.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -79,6 +125,7 @@ export default function RegisterSeller() {
               onChange={handleChange}
               className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               required
+              disabled={isCustomerLoggedIn}
             />
 
             <input
@@ -101,32 +148,38 @@ export default function RegisterSeller() {
               required
             />
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Mật khẩu"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-              required
-            />
+            {!isCustomerLoggedIn && (
+              <>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Mật khẩu"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  required
+                />
 
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Xác nhận mật khẩu"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-              required
-            />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Xác nhận mật khẩu"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  required
+                />
+              </>
+            )}
 
             {/* SUBMIT */}
             <button
               type="submit"
               className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-semibold"
             >
-              Đăng ký bán hàng
+              {isCustomerLoggedIn
+                ? "Nâng cấp thành tài khoản seller"
+                : "Đăng ký bán hàng"}
             </button>
 
             {/* LOGIN LINK */}

@@ -10,6 +10,9 @@ const authApi = {
   registerSeller: (data) => {
     return axiosClient.post("users/seller/register", data);
   },
+  upgradeSeller: (data) => {
+    return axiosClient.post("users/seller/upgrade", data);
+  },
   loginSeller: (data) => {
     return axiosClient.post("users/seller/login", data);
   },

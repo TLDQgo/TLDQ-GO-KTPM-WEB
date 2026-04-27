@@ -9,13 +9,17 @@ const productApi = {
       return await axiosClient.get(`products/seller/${sellerId}?page=${page}`);
     } catch (err) {
       if (err?.response?.status === 404) {
-        console.warn("Product seller route 404, falling back to all products filter...");
+        console.warn(
+          "Product seller route 404, falling back to all products filter...",
+        );
         // Fallback: lấy tất cả sản phẩm và lọc client-side
         const res = await axiosClient.get("products");
         // axiosClient đã unwrap data nên res có thể là mảng trực tiếp hoặc { data: [] }
         const list = Array.isArray(res) ? res : (res?.data ?? []);
-        const filtered = list.filter((p) => String(p.seller_id) === String(sellerId));
-        
+        const filtered = list.filter(
+          (p) => String(p.seller_id) === String(sellerId),
+        );
+
         return {
           success: true,
           data: filtered,
@@ -23,8 +27,8 @@ const productApi = {
             page: 1,
             totalPages: 1,
             totalItems: filtered.length,
-            limit: 1000
-          }
+            limit: 1000,
+          },
         };
       }
       throw err;
@@ -38,6 +42,16 @@ const productApi = {
     return axiosClient.post("products", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+  },
+  getProductsWithPage: (page = 1) => {
+    return axiosClient.get(`/products/page?page=${page}`);
+  },
+
+  // 🔥 lấy theo tên category
+  getByCategoryName: (name, page = 1) => {
+    return axiosClient.get(
+      `/products/category/name/${encodeURIComponent(name)}?page=${page}`,
+    );
   },
 };
 

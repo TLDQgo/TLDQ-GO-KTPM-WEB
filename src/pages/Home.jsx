@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
-
+import apiProduct from "../api/productApi";
 const categories = [
   {
     name: "Sofa Thư Giãn",
@@ -39,7 +39,9 @@ const categories = [
 
 export default function Home() {
   const [products, setProducts] = useState([]);
-
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
     useState(null);
@@ -95,8 +97,12 @@ export default function Home() {
     const user = JSON.parse(storedUser);
 
     try {
-      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
+      const isLocal =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      const BASE_URL = isLocal
+        ? import.meta.env.VITE_API_URL || "http://18.143.172.207:3000"
+        : "";
       const res = await fetch(`${BASE_URL}/api/orders`, {
         method: "POST",
         headers: {
@@ -131,25 +137,27 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Fetch products from API Gateway
-    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
-    fetch(`${BASE_URL}/api/products`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.data) {
-          setProducts(data.data);
-        }
-      })
-      .catch((err) => console.error(err));
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
 
-    // Kiểm tra xem có vị trí cuộn đã lưu không
-    const scrollPosition = sessionStorage.getItem("scrollPosition");
-    if (scrollPosition) {
-      window.scrollTo(0, scrollPosition); // Cuộn đến vị trí đã lưu
-      sessionStorage.removeItem("scrollPosition"); // Xóa vị trí cuộn sau khi đã sử dụng
-    }
-  }, []);
+        const res = await apiProduct.getProductsWithPage(page);
+        console.log("API response:", res);
+        // 🔥 axios trả data nằm trong res.data
+        if (res && res.data) {
+          setProducts(res.data);
+          setTotalPages(res.pagination.totalPages);
+        }
+      } catch (error) {
+        console.error("Fetch products error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [page]);
+
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -217,7 +225,7 @@ export default function Home() {
           </div>
         ))}
       </div>
-      {/* BANNER */}
+
       <div>
         <img
           src="https://theme.hstatic.net/1000213518/1001329030/14/showbannerindimg_2048x2048.png?v=770"
@@ -225,7 +233,7 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
-      {/* Bàn học thông minh */}
+      {/* Sản phẩm 1  */}
       <div className="mt-10">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
@@ -247,63 +255,77 @@ export default function Home() {
           </div>
         </div>
 
-        {/* GRID */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {products.map((item, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedProductForDetails(item)}
-              className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
-            >
-              {/* IMAGE */}
-              <div className="relative">
-                <img
-                  src={
-                    item.images?.[0] ||
-                    item.img ||
-                    "https://via.placeholder.com/150"
-                  }
-                  alt={item.name}
-                  className="object-cover w-full h-48"
-                />
-
-                {/* DISCOUNT */}
-                <span className="absolute px-2 py-1 text-xs text-white bg-red-500 rounded top-2 left-2">
-                  Giảm 25%
-                </span>
-
-                {/* INSTALLMENT */}
-                <span className="absolute px-2 py-1 text-xs bg-gray-100 rounded top-2 right-2">
-                  Trả góp 0%
-                </span>
-              </div>
-
-              {/* CONTENT */}
-              <div className="p-3">
-                <p className="h-10 text-sm font-medium line-clamp-2">
-                  {item.name}
-                </p>
-
-                <p className="mt-2 text-sm font-bold text-red-500">
-                  {item.price?.toLocaleString("vi-VN")}đ
-                </p>
-
-                <p className="text-xs text-gray-400 line-through">
-                  {(item.price * 1.25 || 0).toLocaleString("vi-VN")}đ
-                </p>
-
-                {/* BUTTON */}
-                <button
-                  onClick={(e) => handleOrder(item, e)}
-                  className="w-full py-1 mt-3 text-xs transition border rounded-lg hover:bg-blue-500 hover:text-white"
+        {/* sản phẩm 1 lấy tất cả */}
+        <div>
+          {loading ? (
+            <p className="text-center">Đang tải...</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {products.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => setSelectedProductForDetails(item)}
+                  className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
-                  Đặt hàng ngay
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                  <img
+                    src={item.images?.[0] || "https://via.placeholder.com/150"}
+                    alt={item.name}
+                    className="object-cover w-full h-48"
+                  />
 
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-2">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-2 font-bold text-red-500">
+                      {item.price?.toLocaleString("vi-VN")}đ
+                    </p>
+
+                    <button
+                      onClick={(e) => handleOrder(item, e)}
+                      className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
+                    >
+                      Đặt hàng
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            {/* PREV */}
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {/* PAGE */}
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`px-3 py-1 border rounded ${
+                  page === i + 1 ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            {/* NEXT */}
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>{" "}
+        </div>
         {/* VIEW ALL */}
         <div className="mt-6 text-center">
           <button className="px-4 py-2 border rounded-lg hover:bg-gray-100">
@@ -319,7 +341,7 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
-      {/* Bàn học thông minh */}
+      {/* Sản phẩm 2  */}
       <div className="mt-10">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
@@ -340,62 +362,76 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        {/* GRID */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {products.map((item, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedProductForDetails(item)}
-              className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
-            >
-              {/* IMAGE */}
-              <div className="relative">
-                <img
-                  src={
-                    item.images?.[0] ||
-                    item.img ||
-                    "https://via.placeholder.com/150"
-                  }
-                  alt={item.name}
-                  className="object-cover w-full h-48"
-                />
-
-                {/* DISCOUNT */}
-                <span className="absolute px-2 py-1 text-xs text-white bg-red-500 rounded top-2 left-2">
-                  Giảm 25%
-                </span>
-
-                {/* INSTALLMENT */}
-                <span className="absolute px-2 py-1 text-xs bg-gray-100 rounded top-2 right-2">
-                  Trả góp 0%
-                </span>
-              </div>
-
-              {/* CONTENT */}
-              <div className="p-3">
-                <p className="h-10 text-sm font-medium line-clamp-2">
-                  {item.name}
-                </p>
-
-                <p className="mt-2 text-sm font-bold text-red-500">
-                  {item.price?.toLocaleString("vi-VN")}đ
-                </p>
-
-                <p className="text-xs text-gray-400 line-through">
-                  {(item.price * 1.25 || 0).toLocaleString("vi-VN")}đ
-                </p>
-
-                {/* BUTTON */}
-                <button
-                  onClick={(e) => handleOrder(item, e)}
-                  className="w-full py-1 mt-3 text-xs transition border rounded-lg hover:bg-blue-500 hover:text-white"
+        {/* sản phẩm 2 lấy theo danh mục*/}
+        <div>
+          {loading ? (
+            <p className="text-center">Đang tải...</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {products.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => setSelectedProductForDetails(item)}
+                  className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
-                  Đặt hàng ngay
-                </button>
-              </div>
+                  <img
+                    src={item.images?.[0] || "https://via.placeholder.com/150"}
+                    alt={item.name}
+                    className="object-cover w-full h-48"
+                  />
+
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-2">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-2 font-bold text-red-500">
+                      {item.price?.toLocaleString("vi-VN")}đ
+                    </p>
+
+                    <button
+                      onClick={(e) => handleOrder(item, e)}
+                      className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
+                    >
+                      Đặt hàng
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            {/* PREV */}
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {/* PAGE */}
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`px-3 py-1 border rounded ${
+                  page === i + 1 ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            {/* NEXT */}
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>{" "}
         </div>
 
         {/* VIEW ALL */}

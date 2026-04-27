@@ -36,6 +36,8 @@ const productApi = {
   },
   delete: (id) => axiosClient.delete(`products/${id}`),
 
+  update: (id, data) => axiosClient.put(`products/${id}`, data),
+
   createProduct: (formData) => {
     return axiosClient.post("products", formData, {
       headers: { "Content-Type": "multipart/form-data" },

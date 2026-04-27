@@ -3,12 +3,14 @@ import { useState } from "react";
 import authApi from "../api/authApi";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const setUser = useAuthStore((s) => s.setUser);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -19,7 +21,7 @@ const Login = () => {
       const res = await authApi.login({ email, password });
       toast.success(res.message || "Đăng nhập thành công!");
       localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      setUser(res.user);
       window.dispatchEvent(new Event("auth-change"));
       navigate("/");
     } catch (error) {

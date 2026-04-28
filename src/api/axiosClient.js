@@ -6,7 +6,7 @@ const isLocalhost =
 
 // API Gateway URL
 const API_BASE_URL = isLocalhost
-  ? import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ? import.meta.env.VITE_API_URL
   : "";
 
 const axiosClient = axios.create({

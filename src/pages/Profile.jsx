@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import authApi from "../api/authApi";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
-    role: "customer",
     avatar_url: "",
+    address_line: "",
+    shop_name: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -20,9 +24,11 @@ export default function Profile() {
         setFormData({
           full_name: parsed.full_name || "",
           phone: parsed.phone || "",
-          role: parsed.role || "customer",
           avatar_url: parsed.avatar_url || "",
+          address_line: parsed.customerProfile?.address_line || parsed.sellerProfile?.address_line || "",
+          shop_name: parsed.sellerProfile?.shop_name || "",
         });
+        setProfile(parsed.customerProfile || parsed.sellerProfile || null);
       } catch (e) {
         console.error("Failed to parse user", e);
       }
@@ -45,37 +51,34 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      const id = user._id || user.id;
-      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const BASE_URL = isLocal ? (import.meta.env.VITE_API_URL || "http://18.143.172.207:3000") : "";
-      const res = await fetch(`${BASE_URL}/api/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          email: user.email, // keep email immutable
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Cập nhật thông tin thành công!");
-
-        // Update localStorage
-        const updatedUser = { ...user, ...data.user };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-
-        // Emit global event so Header updates immediately
-        window.dispatchEvent(new Event("auth-change"));
+      let res;
+      if (user.role === "seller") {
+        res = await authApi.updateSellerProfile({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          avatar_url: formData.avatar_url,
+          address_line: formData.address_line,
+          shop_name: formData.shop_name,
+        });
       } else {
-        toast.error(`Lỗi: ${data.message || "Cập nhật thất bại"}`);
+        res = await authApi.updateProfile({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          avatar_url: formData.avatar_url,
+          address_line: formData.address_line,
+        });
       }
+
+      toast.success("Cập nhật thông tin thành công!");
+
+      const updatedUser = { ...user, ...res.user };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
+      window.dispatchEvent(new Event("auth-change"));
     } catch (error) {
       console.error(error);
-      toast.error("Lỗi hệ thống khi cập nhật hồ sơ");
+      toast.error(error.response?.data?.message || "Lỗi hệ thống khi cập nhật hồ sơ");
     } finally {
       setLoading(false);
     }
@@ -84,12 +87,22 @@ export default function Profile() {
   if (!user)
     return <div className="p-8 text-center">Vui lòng đăng nhập...</div>;
 
+  const isSeller = user.role === "seller";
+
   return (
     <div className="min-h-screen px-4 py-10 bg-gray-50">
       <div className="max-w-3xl p-8 mx-auto bg-white shadow rounded-2xl">
-        <h2 className="pb-4 mb-6 text-2xl font-bold text-gray-800 border-b">
-          Hồ Sơ Người Dùng
-        </h2>
+        <div className="flex items-center justify-between pb-4 mb-6 border-b">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isSeller ? "Hồ Sơ Người Bán" : "Hồ Sơ Người Dùng"}
+          </h2>
+          <Link
+            to="/change-password"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Đổi mật khẩu
+          </Link>
+        </div>
 
         <div className="flex flex-col gap-8 md:flex-row">
           {/* Avatar side */}
@@ -101,13 +114,16 @@ export default function Profile() {
               }
               alt="Avatar"
               className="object-cover w-32 h-32 border-4 border-white rounded-full shadow"
+              onError={(e) => {
+                e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+              }}
             />
             <p className="text-sm font-medium text-gray-500">
               Bản thu nhỏ đại diện
             </p>
             <div className="w-full">
               <label className="block mb-1 text-xs text-gray-600">
-                Đổi link ảnh (URL)
+                Link ảnh đại diện (URL)
               </label>
               <input
                 type="text"
@@ -164,33 +180,85 @@ export default function Profile() {
 
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-700">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  name="address_line"
+                  value={formData.address_line}
+                  onChange={handleChange}
+                  placeholder="97 Võ Văn Ngân, Thủ Đức, TP.HCM"
+                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {isSeller && (
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Tên cửa hàng
+                  </label>
+                  <input
+                    type="text"
+                    name="shop_name"
+                    value={formData.shop_name}
+                    onChange={handleChange}
+                    placeholder="Tên cửa hàng của bạn"
+                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">
                   Quyền hạn (Role)
                 </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-white border rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="customer">Khách Hàng (Customer)</option>
-                  <option value="seller">Nhà Bán (Seller)</option>
-                  <option value="admin">Quản Trị Viên (Admin)</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-400">
-                  * Lưu ý: Bạn có thể tự do đổi quyền để kiểm thử các tính năng
-                  hệ thống.
-                </p>
+                <input
+                  type="text"
+                  disabled
+                  value={
+                    user.role === "seller"
+                      ? "Người Bán (Seller)"
+                      : user.role === "admin"
+                      ? "Quản Trị Viên (Admin)"
+                      : "Khách Hàng (Customer)"
+                  }
+                  className="w-full px-3 py-2 text-gray-500 bg-gray-100 border rounded-lg cursor-not-allowed"
+                />
               </div>
 
               <div className="pt-6">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-blue-600 hover:bg-blue-700 rounded-xl"
+                  className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50"
                 >
-                  {loading ? "Đang xử lý..." : "Lưu Thông Tin Cài Đặt"}
+                  {loading ? "Đang xử lý..." : "Lưu Thông Tin"}
                 </button>
               </div>
+
+              {!isSeller ? (
+                <div className="pt-4">
+                  <Link to="/register-seller">
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-orange-500 hover:bg-orange-600 rounded-xl"
+                    >
+                      Đăng Ký Bán Hàng Ngay
+                    </button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="pt-4">
+                  <Link to="/seller">
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-green-500 hover:bg-green-600 rounded-xl"
+                    >
+                      Quay Lại Trang Quản Lý
+                    </button>
+                  </Link>
+                </div>
+              )}
             </form>
           </div>
         </div>

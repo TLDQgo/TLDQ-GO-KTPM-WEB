@@ -9,6 +9,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginAsSeller, setLoginAsSeller] = useState(false);
   const navigate = useNavigate();
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -18,12 +19,23 @@ const Login = () => {
       return;
     }
     try {
-      const res = await authApi.login({ email, password });
+      let res;
+      if (loginAsSeller) {
+        res = await authApi.loginSeller({ email, password });
+      } else {
+        res = await authApi.loginUser({ email, password });
+      }
       toast.success(res.message || "Đăng nhập thành công!");
       localStorage.setItem("token", res.token);
       setUser(res.user);
+      localStorage.setItem("user", JSON.stringify(res.user));
       window.dispatchEvent(new Event("auth-change"));
-      navigate("/");
+
+      if (loginAsSeller && res.user.role === "seller") {
+        navigate("/seller");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Đăng nhập thất bại");
     }
@@ -45,7 +57,33 @@ const Login = () => {
       {/* RIGHT */}
       <div className="w-full lg:w-1/2 flex pt-[100px] justify-center bg-gray-50">
         <div className="w-full max-w-md p-6">
-          <h2 className="mb-6 text-2xl font-semibold text-center">Đăng nhập</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-center">Đăng nhập</h2>
+
+          {/* Login Type Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setLoginAsSeller(false)}
+                className={`px-4 py-2 text-sm rounded-md transition ${
+                  !loginAsSeller
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Khách hàng
+              </button>
+              <button
+                onClick={() => setLoginAsSeller(true)}
+                className={`px-4 py-2 text-sm rounded-md transition ${
+                  loginAsSeller
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Người bán
+              </button>
+            </div>
+          </div>
 
           {/* Google Login */}
           <button className="flex items-center justify-center w-full gap-2 py-3 mb-4 border rounded-lg hover:bg-gray-100">
@@ -79,7 +117,7 @@ const Login = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute cursor-pointer right-3 top-3"
               >
-                👁
+                {showPassword ? "🙈" : "👁"}
               </span>
             </div>
 
@@ -98,8 +136,10 @@ const Login = () => {
             </div>
 
             {/* Forgot */}
-            <p className="text-sm text-center text-blue-600 cursor-pointer">
-              Quên mật khẩu?
+            <p className="text-sm text-center">
+              <Link to="/forgot-password" className="text-blue-600 hover:underline">
+                Quên mật khẩu?
+              </Link>
             </p>
           </div>
         </div>

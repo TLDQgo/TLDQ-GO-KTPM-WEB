@@ -7,6 +7,9 @@ import Login from "../pages/Login";
 import Profile from "../pages/Profile";
 import RegisterSeller from "../pages/RegisterSeller";
 import LoginSeller from "../pages/LoginSeller";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
+import ChangePassword from "../pages/ChangePassword";
 
 export default function RoutesUser() {
   return (
@@ -56,6 +59,30 @@ export default function RoutesUser() {
         element={
           <UserLayout>
             <Profile />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <UserLayout>
+            <ForgotPassword />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <UserLayout>
+            <ResetPassword />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/change-password"
+        element={
+          <UserLayout>
+            <ChangePassword />
           </UserLayout>
         }
       />

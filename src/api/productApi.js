@@ -1,20 +1,21 @@
-import axiosClient from "./axiosClient";
+import { productApiClient } from "./axiosClient";
 
 const productApi = {
+  getProducts: () => {
+    return productApiClient.get("/products");
+  },
   getProductsWithPage: (page = 1) => {
-    return axiosClient.get(`products/page?page=${page}`);
+    return productApiClient.get(`/products/page?page=${page}`);
   },
   getProductsBySeller: async (sellerId, page = 1) => {
     try {
-      return await axiosClient.get(`products/seller/${sellerId}?page=${page}`);
+      return await productApiClient.get(`/products/seller/${sellerId}?page=${page}`);
     } catch (err) {
       if (err?.response?.status === 404) {
         console.warn(
           "Product seller route 404, falling back to all products filter...",
         );
-        // Fallback: lấy tất cả sản phẩm và lọc client-side
-        const res = await axiosClient.get("products");
-        // axiosClient đã unwrap data nên res có thể là mảng trực tiếp hoặc { data: [] }
+        const res = await productApiClient.get("/products");
         const list = Array.isArray(res) ? res : (res?.data ?? []);
         const filtered = list.filter(
           (p) => String(p.seller_id) === String(sellerId),
@@ -34,22 +35,19 @@ const productApi = {
       throw err;
     }
   },
-  delete: (id) => axiosClient.delete(`products/${id}`),
+  delete: (id) => productApiClient.delete(`/products/${id}`),
 
-  update: (id, data) => axiosClient.put(`products/${id}`, data),
+  update: (id, data) => productApiClient.put(`/products/${id}`, data),
 
   createProduct: (formData) => {
-    return axiosClient.post("products", formData, {
+    return productApiClient.post("/products", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  getProductsWithPage: (page = 1) => {
-    return axiosClient.get(`/products/page?page=${page}`);
-  },
 
-  // 🔥 lấy theo tên category
+  // lấy theo tên category
   getByCategoryName: (name, page = 1) => {
-    return axiosClient.get(
+    return productApiClient.get(
       `/products/category/name/${encodeURIComponent(name)}?page=${page}`,
     );
   },

@@ -32,3 +32,4 @@ dist-ssr
 
 # Thêm cái này nếu bạn dùng Mac
 .DS_Store
+.cursor/

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import useAuthStore from "../../store/useAuthStore";
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const setUserStore = useAuthStore((s) => s.setUser);
 
   const loadUser = () => {
     const storedUser = localStorage.getItem("user");
@@ -28,16 +30,7 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-    navigate("/login");
-  };
-
-  const handleSellerClick = () => {
-    // if (user?.role === "seller") {
-    //   navigate("/seller");
-    // } else {
-    //   navigate("/register-seller");
-    // }
-    navigate("/register-seller");
+    navigate("/");
   };
 
   return (
@@ -69,21 +62,21 @@ const Header = () => {
 
         {/* ACTIONS */}
         <div className="flex gap-3 items-center">
-          {/* SELLER BUTTON */}
-          <button
-            onClick={handleSellerClick}
-            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
-          >
-            Đăng Ký Bán hàng
-          </button>
-
           {user ? (
             <>
               {/* USER */}
               <Link
                 to="/profile"
-                className="font-semibold text-gray-700 hover:text-blue-600 transition"
+                className="font-semibold text-gray-700 hover:text-blue-600 transition flex items-center gap-2"
               >
+                {user.avatar_url && (
+                  <img
+                    src={user.avatar_url}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
+                )}
                 Chào, {user.full_name || user.email}
               </Link>
 
@@ -97,7 +90,7 @@ const Header = () => {
             </>
           ) : (
             <>
-              {/* LOGIN */}
+              {/* LOGIN BUTTON */}
               <Link to="/login">
                 <button className="border px-4 py-2 rounded-lg hover:bg-gray-50 transition">
                   Đăng Nhập

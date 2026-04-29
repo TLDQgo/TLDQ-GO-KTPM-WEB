@@ -54,7 +54,7 @@ export default function RegisterSeller() {
         window.dispatchEvent(new Event("auth-change"));
 
         toast.success(res?.message || "Nâng cấp tài khoản seller thành công!");
-        navigate("/seller");
+        navigate("/seller/settings?from=register");
         return;
       }
 
@@ -70,7 +70,7 @@ export default function RegisterSeller() {
         full_name: form.shopName,
       });
 
-      toast.success(res?.message || "Đăng ký seller thành công!");
+      toast.success(res?.message || "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.");
       navigate("/login-seller");
     } catch (error) {
       toast.error(

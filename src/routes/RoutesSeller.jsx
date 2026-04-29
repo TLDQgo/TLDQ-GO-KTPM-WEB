@@ -5,6 +5,7 @@ import ProductManagementSeller from "../pages/seller/ProductManagementSeller";
 import ProductNewAddPage from "../pages/seller/ProductNewAddPage";
 import OrderManagementSeller from "../pages/seller/OrderManagementSeller";
 import SellerSettings from "../pages/seller/SellerSettings";
+import VoucherManagementSeller from "../pages/seller/VoucherManagementSeller";
 
 export default function RoutesSeller() {
   return (
@@ -46,6 +47,14 @@ export default function RoutesSeller() {
         element={
           <SellerLayout>
             <SellerSettings />
+          </SellerLayout>
+        }
+      />
+      <Route
+        path="/seller/promotions"
+        element={
+          <SellerLayout>
+            <VoucherManagementSeller />
           </SellerLayout>
         }
       />

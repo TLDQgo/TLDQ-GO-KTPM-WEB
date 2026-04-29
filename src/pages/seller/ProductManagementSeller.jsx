@@ -9,6 +9,8 @@ export default function ProductManagementSeller() {
   const [pagination, setPagination] = useState({});
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editImage, setEditImage] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState("");
   const [editForm, setEditForm] = useState({
     name: "",
     price: "",
@@ -54,6 +56,8 @@ export default function ProductManagementSeller() {
 
   const openEditModal = (item) => {
     setEditingProduct(item);
+    setEditImage(null);
+    setEditImagePreview(item.images?.[0] || "");
     setEditForm({
       name: item.name || "",
       price: item.price ?? "",
@@ -68,17 +72,32 @@ export default function ProductManagementSeller() {
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEditImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setEditImage(file);
+
+    if (file) {
+      setEditImagePreview(URL.createObjectURL(file));
+      return;
+    }
+
+    setEditImagePreview(editingProduct?.images?.[0] || "");
+  };
+
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
     if (!editingProduct?._id) return;
 
     try {
-      const payload = {
-        name: editForm.name,
-        price: Number(editForm.price) || 0,
-        stock_quantity: Number(editForm.stock_quantity) || 0,
-        description: editForm.description,
-      };
+      const payload = new FormData();
+      payload.append("name", editForm.name);
+      payload.append("price", Number(editForm.price) || 0);
+      payload.append("stock_quantity", Number(editForm.stock_quantity) || 0);
+      payload.append("description", editForm.description);
+
+      if (editImage) {
+        payload.append("image", editImage);
+      }
 
       const res = await productApi.update(editingProduct._id, payload);
       const updatedProduct = res?.data || payload;
@@ -93,6 +112,8 @@ export default function ProductManagementSeller() {
 
       setIsEditOpen(false);
       setEditingProduct(null);
+      setEditImage(null);
+      setEditImagePreview("");
       alert("✅ Cập nhật sản phẩm thành công");
     } catch (error) {
       console.error("Lỗi cập nhật sản phẩm:", error);
@@ -223,7 +244,11 @@ export default function ProductManagementSeller() {
 
       <Modal
         isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditImage(null);
+          setEditImagePreview("");
+        }}
         title="Cập nhật sản phẩm"
         maxWidth="max-w-lg"
       >
@@ -275,6 +300,24 @@ export default function ProductManagementSeller() {
               className="w-full border p-2 rounded"
               rows={4}
             />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">Ảnh sản phẩm (cập nhật 1 ảnh)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleEditImageChange}
+              className="w-full"
+            />
+
+            {editImagePreview && (
+              <img
+                src={editImagePreview}
+                alt="preview"
+                className="w-24 h-24 object-cover rounded border mt-2"
+              />
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

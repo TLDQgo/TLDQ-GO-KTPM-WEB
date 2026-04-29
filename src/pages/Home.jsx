@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
 import apiProduct from "../api/productApi";
+import ProductPrice from "../components/common/ProductPrice";
 const categories = [
   {
     name: "Sofa Thư Giãn",
@@ -278,9 +279,9 @@ export default function Home() {
                       {item.name}
                     </p>
 
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
-                    </p>
+                    <div className="mt-2">
+                      <ProductPrice product={item} />
+                    </div>
 
                     <button
                       onClick={(e) => handleOrder(item, e)}
@@ -385,9 +386,9 @@ export default function Home() {
                       {item.name}
                     </p>
 
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
-                    </p>
+                    <div className="mt-2">
+                      <ProductPrice product={item} />
+                    </div>
 
                     <button
                       onClick={(e) => handleOrder(item, e)}
@@ -474,9 +475,11 @@ export default function Home() {
               <h2 className="text-xl font-bold text-gray-800">
                 {selectedProductForDetails.name}
               </h2>
-              <p className="text-2xl font-bold text-red-500">
-                {selectedProductForDetails.price?.toLocaleString("vi-VN")}đ
-              </p>
+              <ProductPrice
+                product={selectedProductForDetails}
+                className="text-lg"
+                showBadge={false}
+              />
 
               <div className="flex items-center gap-2">
                 <span className="text-yellow-400">★</span>

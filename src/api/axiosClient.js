@@ -2,7 +2,7 @@ import axios from "axios";
 
 const isLocalhost =
   window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.0.1";
+  window.location.hostname === "127.0.0.1";
 
 // API Gateway URL
 const API_BASE_URL = isLocalhost

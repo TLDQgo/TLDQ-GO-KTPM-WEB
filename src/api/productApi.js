@@ -37,7 +37,15 @@ const productApi = {
   },
   delete: (id) => productApiClient.delete(`/products/${id}`),
 
-  update: (id, data) => productApiClient.put(`/products/${id}`, data),
+  update: (id, data) => {
+    if (data instanceof FormData) {
+      return productApiClient.put(`/products/${id}`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+
+    return productApiClient.put(`/products/${id}`, data);
+  },
 
   createProduct: (formData) => {
     return productApiClient.post("/products", formData, {

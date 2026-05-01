@@ -48,10 +48,8 @@ const productApi = {
   },
 
   // 🔥 lấy theo tên category
-  getByCategoryName: (name, page = 1) => {
-    return axiosClient.get(
-      `/products/category/name/${encodeURIComponent(name)}?page=${page}`,
-    );
+  getProductsByCategoryName: (name, page = 1) => {
+    return axiosClient.get(`/products/category/name/${name}?page=${page}`);
   },
 };
 

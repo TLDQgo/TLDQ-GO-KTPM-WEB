@@ -18,6 +18,7 @@ export default function RegisterSeller() {
     password: "",
     confirmPassword: "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isCustomerLoggedIn) return;
@@ -37,12 +38,21 @@ export default function RegisterSeller() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
+    const normalizedShopName = form.shopName.trim();
+    if (!normalizedShopName) {
+      toast.error("Tên shop là bắt buộc");
+      return;
+    }
 
     try {
+      setSubmitting(true);
+
       if (isCustomerLoggedIn) {
         const res = await authApi.upgradeSeller({
           phone: form.phone,
-          full_name: form.shopName,
+          full_name: normalizedShopName,
         });
 
         if (res?.token) {
@@ -54,7 +64,7 @@ export default function RegisterSeller() {
         window.dispatchEvent(new Event("auth-change"));
 
         toast.success(res?.message || "Nâng cấp tài khoản seller thành công!");
-        navigate("/seller");
+        navigate("/seller/settings?from=register");
         return;
       }
 
@@ -67,18 +77,20 @@ export default function RegisterSeller() {
         email: form.email,
         password: form.password,
         phone: form.phone,
-        full_name: form.shopName,
+        full_name: normalizedShopName,
       });
 
-      toast.success(res?.message || "Đăng ký seller thành công!");
+      toast.success(res?.message || "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.");
       navigate("/login-seller");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          (isCustomerLoggedIn
-            ? "Nâng cấp tài khoản seller thất bại"
-            : "Đăng ký seller thất bại"),
+        (isCustomerLoggedIn
+          ? "Nâng cấp tài khoản seller thất bại"
+          : "Đăng ký seller thất bại"),
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -176,15 +188,21 @@ export default function RegisterSeller() {
             <button
               type="submit"
               className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-semibold"
+              disabled={submitting}
             >
               {isCustomerLoggedIn
                 ? "Nâng cấp thành tài khoản seller"
                 : "Đăng ký bán hàng"}
             </button>
 
+
             {/* LOGIN LINK */}
             <p className="text-center text-sm text-gray-600">
-              Đã có tài khoản?{" "}
+              {submitting
+                ? "Đang xử lý..."
+                : isCustomerLoggedIn
+                  ? "Nâng cấp Seller"
+                  : "Đăng ký Seller"}
               <Link
                 to="/login-seller"
                 className="text-orange-500 font-medium hover:underline"

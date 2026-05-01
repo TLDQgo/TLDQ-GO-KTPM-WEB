@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import productApi from "../api/productApi";
+import ProductPrice from "./common/ProductPrice";
 
 export default function ProductGrid({
   categoryName = "",
@@ -64,9 +65,9 @@ export default function ProductGrid({
                 {item.name}
               </p>
 
-              <p className="mt-2 text-sm font-bold text-red-500">
-                {item.price?.toLocaleString("vi-VN")}đ
-              </p>
+              <div className="mt-2">
+                <ProductPrice product={item} />
+              </div>
 
               <button
                 onClick={(e) => {

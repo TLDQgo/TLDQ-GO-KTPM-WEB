@@ -3,8 +3,10 @@ import axios from "axios";
 const isLocalhost =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
+
+// API Gateway URL
 const API_BASE_URL = isLocalhost
-  ? import.meta.env.VITE_API_URL || "http://18.143.172.207:3000"
+  ? import.meta.env.VITE_API_URL
   : "";
 
 const axiosClient = axios.create({
@@ -24,7 +26,7 @@ axiosClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 axiosClient.interceptors.response.use(
@@ -36,7 +38,9 @@ axiosClient.interceptors.response.use(
   },
   (error) => {
     throw error;
-  },
+  }
 );
 
+// Re-export cho backward compatibility
+export { axiosClient as userApiClient, axiosClient as productApiClient, axiosClient as orderApiClient };
 export default axiosClient;

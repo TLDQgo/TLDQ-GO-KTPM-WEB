@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
 import apiProduct from "../api/productApi";
+import ProductPrice from "../components/common/ProductPrice";
 const categories = [
   {
     name: "Sofa Thư Giãn",
@@ -106,7 +107,7 @@ export default function Home() {
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1";
       const BASE_URL = isLocal
-        ? import.meta.env.VITE_API_URL || "http://18.143.172.207:3000"
+        ? import.meta.env.VITE_API_URL || "http://localhost:3000"
         : "";
       const res = await fetch(`${BASE_URL}/api/orders`, {
         method: "POST",
@@ -313,9 +314,9 @@ export default function Home() {
                       {item.name}
                     </p>
 
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
-                    </p>
+                    <div className="mt-2">
+                      <ProductPrice product={item} />
+                    </div>
 
                     {/* 🔥 THÊM DÒNG NÀY */}
                     <p className="text-xs text-gray-400 mt-1">
@@ -419,9 +420,9 @@ export default function Home() {
                       {item.name}
                     </p>
 
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
-                    </p>
+                    <div className="mt-2">
+                      <ProductPrice product={item} />
+                    </div>
 
                     <button
                       onClick={(e) => handleOrder(item, e)}
@@ -508,9 +509,11 @@ export default function Home() {
               <h2 className="text-xl font-bold text-gray-800">
                 {selectedProductForDetails.name}
               </h2>
-              <p className="text-2xl font-bold text-red-500">
-                {selectedProductForDetails.price?.toLocaleString("vi-VN")}đ
-              </p>
+              <ProductPrice
+                product={selectedProductForDetails}
+                className="text-lg"
+                showBadge={false}
+              />
 
               <div className="flex items-center gap-2">
                 <span className="text-yellow-400">★</span>

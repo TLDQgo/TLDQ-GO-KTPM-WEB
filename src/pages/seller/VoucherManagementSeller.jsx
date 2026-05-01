@@ -13,12 +13,46 @@ const createInitialForm = () => ({
   apply_scope: "all",
 });
 
+const DATE_TIME_ZONE = "Asia/Ho_Chi_Minh";
+const DATE_TIME_ZONE_OFFSET = "+07:00";
+
 const toDateTimeLocal = (value) => {
   if (!value) return "";
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  const offsetMs = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: DATE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+};
+
+const toDateTimePayload = (value) => {
+  if (!value) return "";
+
+  return `${value}:00${DATE_TIME_ZONE_OFFSET}`;
+};
+
+const formatDateTimeDisplay = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: DATE_TIME_ZONE,
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
 };
 
 function ProductPickerModal({ isOpen, onClose, title, products, selectedProductIds, onToggle }) {
@@ -175,8 +209,8 @@ export default function VoucherManagementSeller() {
   const buildPayload = (voucherForm, productIds) => ({
     seller_id: sellerId,
     name: voucherForm.name.trim(),
-    start_date: voucherForm.start_date,
-    end_date: voucherForm.end_date,
+    start_date: toDateTimePayload(voucherForm.start_date),
+    end_date: toDateTimePayload(voucherForm.end_date),
     discount_percent: Number(voucherForm.discount_percent),
     quantity: Number(voucherForm.quantity),
     apply_scope: voucherForm.apply_scope,
@@ -192,7 +226,7 @@ export default function VoucherManagementSeller() {
       return "❌ Vui lòng chọn đầy đủ thời gian bắt đầu và kết thúc";
     }
 
-    if (new Date(voucherForm.end_date) <= new Date(voucherForm.start_date)) {
+    if (new Date(toDateTimePayload(voucherForm.end_date)) <= new Date(toDateTimePayload(voucherForm.start_date))) {
       return "❌ Thời gian kết thúc phải sau thời gian bắt đầu";
     }
 
@@ -491,8 +525,8 @@ export default function VoucherManagementSeller() {
                   <td className="p-3">{item.name}</td>
                   <td className="p-3 text-center">{item.discount_percent}%</td>
                   <td className="p-3 text-center text-xs">
-                    <div>{new Date(item.start_date).toLocaleString("vi-VN")}</div>
-                    <div>{new Date(item.end_date).toLocaleString("vi-VN")}</div>
+                    <div>{formatDateTimeDisplay(item.start_date)}</div>
+                    <div>{formatDateTimeDisplay(item.end_date)}</div>
                   </td>
                   <td className="p-3 text-center">{item.quantity}</td>
                   <td className="p-3 text-center">

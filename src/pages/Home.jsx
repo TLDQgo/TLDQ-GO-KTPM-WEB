@@ -43,11 +43,16 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isBestSeller, setIsBestSeller] = useState(false); // 🔥 thêm
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
     useState(null);
   const [selectedProductForCheckout, setSelectedProductForCheckout] =
     useState(null);
+
+  const [categoryProducts, setCategoryProducts] = useState([]);
+  const [categoryPage, setCategoryPage] = useState(1);
+  const [categoryTotalPages, setCategoryTotalPages] = useState(1);
 
   // Form states
   const [checkoutForm, setCheckoutForm] = useState({
@@ -158,7 +163,35 @@ export default function Home() {
 
     fetchProducts();
   }, [page]);
+  // loctheo bán chạy nhất
+  const displayProducts = isBestSeller
+    ? [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0))
+    : products;
+  // tim category
+  useEffect(() => {
+    const fetchCategoryProducts = async () => {
+      try {
+        setLoading(true);
 
+        const res = await apiProduct.getProductsByCategoryName(
+          "Bàn Học",
+          categoryPage,
+        );
+
+        if (res && res.data) {
+          setCategoryProducts(res.data || []);
+          setCategoryTotalPages(res.pagination?.totalPages || 1);
+        }
+      } catch (error) {
+        console.error("Fetch category products error:", error);
+        setCategoryProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategoryProducts();
+  }, [categoryPage]);
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -244,11 +277,13 @@ export default function Home() {
           </h2>
 
           <div className="flex gap-2">
-            <button className="px-3 py-1 text-sm border rounded-lg">
-              Thương hiệu iSmart
-            </button>
-            <button className="px-3 py-1 text-sm border rounded-lg">
-              Hanover cao cấp
+            <button
+              onClick={() => setIsBestSeller(!isBestSeller)}
+              className={`px-3 py-1 text-sm border rounded-lg ${
+                isBestSeller ? "bg-blue-500 text-white" : ""
+              }`}
+            >
+              Sản Phẩm Bán Chạy Nhất
             </button>
             <button className="px-3 py-1 text-sm text-white bg-blue-500 border rounded-lg">
               Tất Cả
@@ -262,7 +297,7 @@ export default function Home() {
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {products.map((item) => (
+              {displayProducts.map((item) => (
                 <div
                   key={item._id}
                   onClick={() => setSelectedProductForDetails(item)}
@@ -282,6 +317,11 @@ export default function Home() {
                     <div className="mt-2">
                       <ProductPrice product={item} />
                     </div>
+
+                    {/* 🔥 THÊM DÒNG NÀY */}
+                    <p className="text-xs text-gray-400 mt-1">
+                      Đã bán: {item.sold || 0}
+                    </p>
 
                     <button
                       onClick={(e) => handleOrder(item, e)}
@@ -352,12 +392,6 @@ export default function Home() {
           </h2>
 
           <div className="flex gap-2">
-            <button className="px-3 py-1 text-sm border rounded-lg">
-              Thương hiệu iSmart
-            </button>
-            <button className="px-3 py-1 text-sm border rounded-lg">
-              Hanover cao cấp
-            </button>
             <button className="px-3 py-1 text-sm text-white bg-blue-500 border rounded-lg">
               Tất Cả
             </button>
@@ -369,7 +403,7 @@ export default function Home() {
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {products.map((item) => (
+              {(categoryProducts || []).map((item) => (
                 <div
                   key={item._id}
                   onClick={() => setSelectedProductForDetails(item)}

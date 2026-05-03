@@ -52,7 +52,9 @@ export default function Home() {
   const [categoryProducts, setCategoryProducts] = useState([]);
   const [categoryPage, setCategoryPage] = useState(1);
   const [categoryTotalPages, setCategoryTotalPages] = useState(1);
-
+  const [gheProducts, setGheProducts] = useState([]);
+  const [ghePage, setGhePage] = useState(1);
+  const [gheTotalPages, setGheTotalPages] = useState(1);
   // Form states
   const [checkoutForm, setCheckoutForm] = useState({
     receiver_name: "",
@@ -191,6 +193,30 @@ export default function Home() {
 
     fetchCategoryProducts();
   }, [categoryPage]);
+
+  useEffect(() => {
+    const fetchGhe = async () => {
+      try {
+        setLoading(true);
+
+        const res = await apiProduct.getProductsByCategoryName(
+          "Ghế công thái học",
+          ghePage,
+        );
+
+        if (res) {
+          setGheProducts(res.data || []);
+          setGheTotalPages(res.pagination?.totalPages || 1);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGhe();
+  }, [ghePage]);
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -437,8 +463,8 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 mt-6">
             {/* PREV */}
             <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
+              disabled={categoryPage === 1}
+              onClick={() => setCategoryPage(categoryPage - 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
               Prev
@@ -448,9 +474,9 @@ export default function Home() {
             {[...Array(totalPages)].map((_, i) => (
               <button
                 key={i}
-                onClick={() => setPage(i + 1)}
+                onClick={() => setCategoryPage(i + 1)}
                 className={`px-3 py-1 border rounded ${
-                  page === i + 1 ? "bg-blue-500 text-white" : ""
+                  categoryPage === i + 1 ? "bg-blue-500 text-white" : ""
                 }`}
               >
                 {i + 1}
@@ -459,8 +485,8 @@ export default function Home() {
 
             {/* NEXT */}
             <button
-              disabled={page === totalPages}
-              onClick={() => setPage(page + 1)}
+              disabled={categoryPage === totalPages}
+              onClick={() => setCategoryPage(categoryPage + 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
               Next
@@ -483,7 +509,100 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
+      {/* Sản phẩm 3  */}
+      <div className="mt-10">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
+            GHẾ CÔNG THÁI HỌC
+            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+          </h2>
 
+          <div className="flex gap-2">
+            <button className="px-3 py-1 text-sm text-white bg-blue-500 border rounded-lg">
+              Tất Cả
+            </button>
+          </div>
+        </div>
+        {/* sản phẩm 3 lấy theo danh mục*/}
+        <div>
+          {loading ? (
+            <p className="text-center">Đang tải...</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {(gheProducts || []).map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => setSelectedProductForDetails(item)}
+                  className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
+                >
+                  <img
+                    src={item.images?.[0] || "https://via.placeholder.com/150"}
+                    alt={item.name}
+                    className="object-cover w-full h-48"
+                  />
+
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-2">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-2 font-bold text-red-500">
+                      {item.price?.toLocaleString("vi-VN")}đ
+                    </p>
+
+                    <button
+                      onClick={(e) => handleOrder(item, e)}
+                      className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
+                    >
+                      Đặt hàng
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            {/* PREV */}
+            <button
+              disabled={ghePage === 1}
+              onClick={() => setGhePage(ghePage - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {/* PAGE */}
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setGhePage(i + 1)}
+                className={`px-3 py-1 border rounded ${
+                  ghePage === i + 1 ? "bg-blue-500 text-white" : ""
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            {/* NEXT */}
+            <button
+              disabled={ghePage === totalPages}
+              onClick={() => setGhePage(ghePage + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>{" "}
+        </div>
+
+        {/* VIEW ALL */}
+        <div className="mt-6 text-center">
+          <button className="px-4 py-2 border rounded-lg hover:bg-gray-100">
+            Xem tất cả
+          </button>
+        </div>
+      </div>
       {/* Product Details Modal */}
       <Modal
         isOpen={!!selectedProductForDetails}

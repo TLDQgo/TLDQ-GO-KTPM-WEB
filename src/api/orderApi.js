@@ -22,6 +22,10 @@ const orderApi = {
   updateOrderStatus: (orderId, status) => {
     return orderApiClient.put(`/orders/${orderId}/status`, { status });
   },
+
+  getSellerStats: (sellerId, period = "30days") => {
+    return orderApiClient.get(`/orders/seller/${sellerId}/stats?period=${period}`);
+  },
 };
 
 export default orderApi;

@@ -6,6 +6,7 @@ import ProductNewAddPage from "../pages/seller/ProductNewAddPage";
 import OrderManagementSeller from "../pages/seller/OrderManagementSeller";
 import SellerSettings from "../pages/seller/SellerSettings";
 import VoucherManagementSeller from "../pages/seller/VoucherManagementSeller";
+import RevenueStatsSeller from "../pages/seller/RevenueStatsSeller";
 
 export default function RoutesSeller() {
   return (
@@ -55,6 +56,14 @@ export default function RoutesSeller() {
         element={
           <SellerLayout>
             <VoucherManagementSeller />
+          </SellerLayout>
+        }
+      />
+      <Route
+        path="/seller/thong-ke"
+        element={
+          <SellerLayout>
+            <RevenueStatsSeller />
           </SellerLayout>
         }
       />

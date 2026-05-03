@@ -78,14 +78,14 @@ export default function SidebarSeller() {
           </li>
         </Link>
 
-        <Link to="/seller/analytics">
+        <Link to="/seller/thong-ke">
           <li
             className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
-              activeItem === "analytics"
+              activeItem === "stats"
                 ? "bg-red-50 text-red-500"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
-            onClick={() => handleItemClick("analytics")}
+            onClick={() => handleItemClick("stats")}
           >
             <BarChart2 size={18} />
             <span>Thống kê doanh thu</span>

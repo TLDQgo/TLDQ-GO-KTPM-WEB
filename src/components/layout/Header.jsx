@@ -32,7 +32,14 @@ const Header = () => {
     setUser(null);
     navigate("/");
   };
-
+  const handleSellerClick = () => {
+    // if (user?.role === "seller") {
+    //   navigate("/seller");
+    // } else {
+    //   navigate("/register-seller");
+    // }
+    navigate("/register-seller");
+  };
   return (
     <header className="w-full border-b bg-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
@@ -50,7 +57,7 @@ const Header = () => {
             Giới Thiệu
           </a>
           <a href="#" className="hover:text-blue-600">
-            Việc Làm
+            Sản Phẩm
           </a>
           <a href="#" className="hover:text-blue-600">
             Liên Hệ
@@ -62,6 +69,13 @@ const Header = () => {
 
         {/* ACTIONS */}
         <div className="flex gap-3 items-center">
+          {" "}
+          <button
+            onClick={handleSellerClick}
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+          >
+            Nhà Bán hàng
+          </button>
           {user ? (
             <>
               {/* USER */}
@@ -74,7 +88,9 @@ const Header = () => {
                     src={user.avatar_url}
                     alt="Avatar"
                     className="w-8 h-8 rounded-full object-cover"
-                    onError={(e) => { e.target.style.display = "none"; }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
                   />
                 )}
                 Chào, {user.full_name || user.email}

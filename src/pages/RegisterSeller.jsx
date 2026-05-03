@@ -80,14 +80,17 @@ export default function RegisterSeller() {
         full_name: normalizedShopName,
       });
 
-      toast.success(res?.message || "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.");
+      toast.success(
+        res?.message ||
+          "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.",
+      );
       navigate("/login-seller");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-        (isCustomerLoggedIn
-          ? "Nâng cấp tài khoản seller thất bại"
-          : "Đăng ký seller thất bại"),
+          (isCustomerLoggedIn
+            ? "Nâng cấp tài khoản seller thất bại"
+            : "Đăng ký seller thất bại"),
       );
     } finally {
       setSubmitting(false);
@@ -108,7 +111,9 @@ export default function RegisterSeller() {
         {/* RIGHT SIDE FORM */}
         <div className="p-8">
           <h1 className="text-2xl font-semibold mb-6 text-center">
-            {isCustomerLoggedIn ? "Nâng cấp tài khoản Seller" : "Đăng ký Seller"}
+            {isCustomerLoggedIn
+              ? "Nâng cấp tài khoản Seller"
+              : "Đăng ký Seller"}
           </h1>
 
           {isCustomerLoggedIn && (
@@ -195,7 +200,6 @@ export default function RegisterSeller() {
                 : "Đăng ký bán hàng"}
             </button>
 
-
             {/* LOGIN LINK */}
             <p className="text-center text-sm text-gray-600">
               {submitting
@@ -207,7 +211,7 @@ export default function RegisterSeller() {
                 to="/login-seller"
                 className="text-orange-500 font-medium hover:underline"
               >
-                Đăng nhập Seller
+                {` Đăng nhập Seller`}
               </Link>
             </p>
 

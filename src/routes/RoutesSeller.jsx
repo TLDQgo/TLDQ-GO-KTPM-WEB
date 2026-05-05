@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { SellerLayout } from "./DashBoardLayout";
 import HomeSeller from "../pages/seller/HomeSeller";
 import ProductManagementSeller from "../pages/seller/ProductManagementSeller";
@@ -7,6 +7,15 @@ import OrderManagementSeller from "../pages/seller/OrderManagementSeller";
 import SellerSettings from "../pages/seller/SellerSettings";
 import VoucherManagementSeller from "../pages/seller/VoucherManagementSeller";
 import RevenueStatsSeller from "../pages/seller/RevenueStatsSeller";
+import useAuthStore from "../store/useAuthStore";
+
+function SellerPrivateRoute({ children }) {
+  const user = useAuthStore((s) => s.user);
+  if (!user || user.role !== "seller") {
+    return <Navigate to="/login-seller" replace />;
+  }
+  return children;
+}
 
 export default function RoutesSeller() {
   return (
@@ -14,57 +23,71 @@ export default function RoutesSeller() {
       <Route
         path="/seller"
         element={
-          <SellerLayout>
-            <HomeSeller />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <HomeSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/quan-ly-san-pham"
         element={
-          <SellerLayout>
-            <ProductManagementSeller />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <ProductManagementSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/them-san-pham"
         element={
-          <SellerLayout>
-            <ProductNewAddPage />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <ProductNewAddPage />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/orders"
         element={
-          <SellerLayout>
-            <OrderManagementSeller />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <OrderManagementSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/settings"
         element={
-          <SellerLayout>
-            <SellerSettings />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <SellerSettings />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/promotions"
         element={
-          <SellerLayout>
-            <VoucherManagementSeller />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <VoucherManagementSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
       <Route
         path="/seller/thong-ke"
         element={
-          <SellerLayout>
-            <RevenueStatsSeller />
-          </SellerLayout>
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <RevenueStatsSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
         }
       />
     </>

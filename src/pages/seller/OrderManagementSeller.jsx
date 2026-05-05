@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import orderApi from "../../api/orderApi";
 import useOrderStore from "../../store/useOrderStore";
+import useAuthStore from "../../store/useAuthStore";
 import { format } from "date-fns";
 
 const STATUS_COLORS = {
@@ -26,8 +27,8 @@ export default function OrderManagementSeller() {
   const queryClient = useQueryClient();
   const { orders, setOrders, updateOrderStatusLocally } = useOrderStore();
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const sellerId = user._id;
+  const user = useAuthStore((s) => s.user);
+  const sellerId = user?.role === "seller" ? user._id : null;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["sellerOrders", sellerId],
@@ -168,11 +169,16 @@ export default function OrderManagementSeller() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="text-sm text-gray-700 max-w-[200px] truncate">
-                        {order.items?.map((item) => item.product_name).join(", ")}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {order.items?.length || 0} sản phẩm
+                      <div className="space-y-1">
+                        {order.items?.map((item) => (
+                          <div key={item.product_id} className="text-sm text-gray-700">
+                            <span className="font-medium">{item.product_name}</span>
+                            <span className="text-gray-500 ml-1">×{item.quantity}</span>
+                            <span className="text-red-500 ml-1 text-xs font-semibold">
+                              {item.price?.toLocaleString("vi-VN")}đ
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </td>
                     <td className="p-4">
@@ -182,9 +188,8 @@ export default function OrderManagementSeller() {
                     </td>
                     <td className="p-4">
                       <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                          STATUS_COLORS[order.status] || "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-full ${STATUS_COLORS[order.status] || "bg-gray-100 text-gray-800"
+                          }`}
                       >
                         {STATUS_LABELS[order.status] || order.status}
                       </span>

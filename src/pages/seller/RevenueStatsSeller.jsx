@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import orderApi from "../../api/orderApi";
+import useAuthStore from "../../store/useAuthStore";
 
 const PERIODS = [
   { label: "7 ngày", value: "7days" },
@@ -42,8 +43,8 @@ function SummaryCard({ title, value, color }) {
 }
 
 export default function RevenueStatsSeller() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const sellerId = user._id;
+  const user = useAuthStore((s) => s.user);
+  const sellerId = user?.role === "seller" ? user._id : null;
 
   const [period, setPeriod] = useState("30days");
 

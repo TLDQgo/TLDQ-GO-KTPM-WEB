@@ -700,8 +700,13 @@ export default function Home() {
                   {selectedProductForCheckout.name}
                 </p>
                 <p className="font-bold text-red-500">
-                  {selectedProductForCheckout.price?.toLocaleString("vi-VN")}đ
+                  {(selectedProductForCheckout.discount_price ?? selectedProductForCheckout.price)?.toLocaleString("vi-VN")}đ
                 </p>
+                {selectedProductForCheckout.discount_price && (
+                  <p className="text-xs text-gray-400 line-through">
+                    {selectedProductForCheckout.price?.toLocaleString("vi-VN")}đ
+                  </p>
+                )}
               </div>
             </div>
 
@@ -808,7 +813,7 @@ export default function Home() {
                 <span className="text-xl font-bold text-red-600">
                   {(
                     (checkoutForm.quantity || 1) *
-                    selectedProductForCheckout.price
+                    (selectedProductForCheckout.discount_price ?? selectedProductForCheckout.price)
                   ).toLocaleString("vi-VN")}
                   đ
                 </span>

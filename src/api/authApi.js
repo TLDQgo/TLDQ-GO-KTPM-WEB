@@ -43,6 +43,13 @@ const authApi = {
 
   getSellerPublicProfile: (sellerId) =>
     axiosClient.get(`users/seller/${sellerId}/profile`),
+
+  // Admin APIs
+  adminLogin: (data) => axiosClient.post("users/admin/login", data),
+  adminListUsers: (params) => axiosClient.get("users/admin/users", { params }),
+  adminUpdateUser: (id, data) => axiosClient.put(`users/admin/users/${id}`, data),
+  adminDeleteUser: (id) => axiosClient.delete(`users/admin/users/${id}`),
+  adminCreateUser: (data) => axiosClient.post("users/admin/users", data),
 };
 
 export default authApi;

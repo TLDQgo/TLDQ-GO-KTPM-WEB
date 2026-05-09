@@ -1,6 +1,7 @@
 import { Route } from "react-router-dom";
 import Home from "../pages/Home";
 import ProductDetail from "../pages/ProductDetail";
+import Cart from "../pages/Cart";
 import { UserLayout } from "./DashBoardLayout";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
@@ -28,6 +29,14 @@ export default function RoutesUser() {
         element={
           <UserLayout>
             <ProductDetail />
+          </UserLayout>
+        }
+      />
+      <Route
+        path="/gio-hang"
+        element={
+          <UserLayout>
+            <Cart />
           </UserLayout>
         }
       />

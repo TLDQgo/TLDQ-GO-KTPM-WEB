@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ShoppingCart } from "lucide-react";
 import useAuthStore from "../../store/useAuthStore";
+import cartApi from "../../api/cartApi";
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const setUserStore = useAuthStore((s) => s.setUser);
+
+  const { data: cartData } = useQuery({
+    queryKey: ["cart", user?._id],
+    queryFn: () => cartApi.getCart(user._id),
+    enabled: !!user?._id,
+    staleTime: 30000,
+  });
+  const cartCount = (cartData?.data ?? cartData)?.items?.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  ) ?? 0;
 
   const loadUser = () => {
     const storedUser = localStorage.getItem("user");
@@ -69,7 +83,19 @@ const Header = () => {
 
         {/* ACTIONS */}
         <div className="flex gap-3 items-center">
-          {" "}
+          {/* CART ICON */}
+          <Link
+            to="/gio-hang"
+            className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] leading-none rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 font-bold">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </Link>
+
           <button
             onClick={handleSellerClick}
             className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"

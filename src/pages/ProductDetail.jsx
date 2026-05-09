@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { Star, ChevronLeft, ShoppingBag, Store, Package } from "lucide-react";
 import productApi from "../api/productApi";
 import authApi from "../api/authApi";
+import cartApi from "../api/cartApi";
 import ProductPrice from "../components/common/ProductPrice";
 import Modal from "../components/common/Modal";
 import useAuthStore from "../store/useAuthStore";
@@ -81,6 +82,7 @@ export default function ProductDetail() {
     payment_method: "COD",
   });
 
+  const [addingToCart, setAddingToCart] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
 
@@ -187,6 +189,26 @@ export default function ProductDetail() {
       }
     } catch (err) {
       toast.error("Đã xảy ra lỗi hệ thống");
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+      return;
+    }
+    setAddingToCart(true);
+    try {
+      await cartApi.addItem(user._id || user.id, {
+        product_id: product._id,
+        quantity: qty,
+      });
+      queryClient.invalidateQueries({ queryKey: ["cart", user._id || user.id] });
+      toast.success("Đã thêm vào giỏ hàng!");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Thêm vào giỏ thất bại");
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -368,14 +390,23 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              <button
-                onClick={handleOpenCheckout}
-                disabled={product.stock_quantity === 0}
-                className="mt-2 flex items-center justify-center gap-2 w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white font-bold rounded-xl transition text-base"
-              >
-                <ShoppingBag size={20} />
-                {product.stock_quantity === 0 ? "Hết hàng" : "Đặt hàng ngay"}
-              </button>
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock_quantity === 0 || addingToCart}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed font-bold rounded-xl transition text-base"
+                >
+                  {addingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
+                </button>
+                <button
+                  onClick={handleOpenCheckout}
+                  disabled={product.stock_quantity === 0}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white font-bold rounded-xl transition text-base"
+                >
+                  <ShoppingBag size={20} />
+                  {product.stock_quantity === 0 ? "Hết hàng" : "Đặt ngay"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

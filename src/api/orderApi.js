@@ -26,6 +26,12 @@ const orderApi = {
   getSellerStats: (sellerId, period = "30days") => {
     return orderApiClient.get(`/orders/seller/${sellerId}/stats?period=${period}`);
   },
+
+  getAdminStats: (period = "30days") => {
+    return orderApiClient.get(`/orders/admin/stats?period=${period}`);
+  },
+
+  createOrder: (data) => orderApiClient.post("/orders", data),
 };
 
 export default orderApi;

@@ -47,10 +47,16 @@ const productApi = {
     return axiosClient.get(`/products/page?page=${page}`);
   },
 
-  // 🔥 lấy theo tên category
   getProductsByCategoryName: (name, page = 1) => {
     return axiosClient.get(`/products/category/name/${name}?page=${page}`);
   },
+
+  getById: (id) => axiosClient.get(`/products/${id}`),
+
+  getReviews: (productId) => axiosClient.get(`/products/${productId}/reviews`),
+
+  createReview: (productId, data) =>
+    axiosClient.post(`/products/${productId}/reviews`, data),
 };
 
 export default productApi;

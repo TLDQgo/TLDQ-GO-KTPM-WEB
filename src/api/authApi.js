@@ -40,6 +40,9 @@ const authApi = {
   updateShopSettings: (data) => {
     return axiosClient.put("users/seller/settings", data);
   },
+
+  getSellerPublicProfile: (sellerId) =>
+    axiosClient.get(`users/seller/${sellerId}/profile`),
 };
 
 export default authApi;

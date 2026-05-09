@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
 import apiProduct from "../api/productApi";
@@ -39,6 +40,7 @@ const categories = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -326,7 +328,7 @@ export default function Home() {
               {displayProducts.map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => setSelectedProductForDetails(item)}
+                  onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
                   <img
@@ -432,7 +434,7 @@ export default function Home() {
               {(categoryProducts || []).map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => setSelectedProductForDetails(item)}
+                  onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
                   <img
@@ -534,7 +536,7 @@ export default function Home() {
               {(gheProducts || []).map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => setSelectedProductForDetails(item)}
+                  onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
                   <img

@@ -1,6 +1,8 @@
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/Header";
+import HeaderAdmin from "../components/layout/HeaderAdmin";
 import HeaderSeller from "../components/layout/HeaderSeller";
+import SidebarAdmin from "../components/layout/SidebarAdmin";
 import SidebarSeller from "../components/layout/SidebarSeller";
 
 const UserLayout = ({ children }) => {
@@ -49,14 +51,21 @@ export { SellerLayout };
 const AdminLayout = ({ children }) => {
   return (
     <>
-      <div className="bg-white shadow">
-        <Header />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <HeaderAdmin />
       </div>
-      <div className="px-[100px]">
-        <main>{children}</main>
-      </div>
-      <div className="bg-white shadow">
-        <Footer />
+
+      <div className="flex pt-[60px]">
+        {/* SIDEBAR */}
+        <SidebarAdmin />
+
+        {/* MAIN */}
+        <div className="flex-1 ml-[260px] p-6">
+          <main className="min-h-[calc(100vh-120px)]">{children}</main>
+
+          {/* FOOTER */}
+          <Footer />
+        </div>
       </div>
     </>
   );

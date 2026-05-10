@@ -3,7 +3,7 @@ import { Bell, Mail, ShoppingCart, Menu, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 
-export default function HeaderSeller() {
+export default function HeaderAdmin() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -19,7 +19,7 @@ export default function HeaderSeller() {
     ? user.full_name.charAt(0).toUpperCase()
     : (user?.email?.charAt(0).toUpperCase() ?? "S");
 
-  const displayName = user?.full_name || user?.email || "Nhà bán";
+  const displayName = user?.full_name || user?.email || "Admin";
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white shadow fixed top-0 left-0 right-0 z-50">
@@ -30,7 +30,7 @@ export default function HeaderSeller() {
           <div className="flex items-center justify-center w-8 h-8 text-white bg-red-500 rounded">
             🛒
           </div>
-          <a href="/seller">
+          <a href="/admin">
             <span className="text-lg font-semibold">Admin Center</span>
           </a>
         </div>
@@ -39,7 +39,7 @@ export default function HeaderSeller() {
         <Menu className="w-5 h-5 text-gray-600 cursor-pointer" />
 
         {/* TEXT */}
-        <span className="text-gray-500 hidden md:block">Admin Center</span>
+        <span className="text-gray-500 hidden md:block">Seller Center</span>
       </div>
 
       {/* RIGHT */}
@@ -77,9 +77,7 @@ export default function HeaderSeller() {
             <div className="text-sm font-medium text-gray-800 leading-tight">
               {displayName}
             </div>
-            <div className="text-xs text-gray-400 leading-tight">
-              Nhà bán hàng
-            </div>
+            <div className="text-xs text-gray-400 leading-tight">Admin</div>
           </div>
         </div>
 

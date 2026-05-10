@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import Modal from "../components/common/Modal";
 import apiProduct from "../api/productApi";
 import ProductPrice from "../components/common/ProductPrice";
+
 const categories = [
   {
     name: "Sofa Thư Giãn",
@@ -45,7 +46,8 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [isBestSeller, setIsBestSeller] = useState(false); // 🔥 thêm
+  const [isBestSeller, setIsBestSeller] = useState(false);
+
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
     useState(null);
@@ -58,6 +60,7 @@ export default function Home() {
   const [gheProducts, setGheProducts] = useState([]);
   const [ghePage, setGhePage] = useState(1);
   const [gheTotalPages, setGheTotalPages] = useState(1);
+
   // Form states
   const [checkoutForm, setCheckoutForm] = useState({
     receiver_name: "",
@@ -150,10 +153,7 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-
         const res = await apiProduct.getProductsWithPage(page);
-        console.log("API response:", res);
-        // 🔥 axios trả data nằm trong res.data
         if (res && res.data) {
           setProducts(res.data);
           setTotalPages(res.pagination.totalPages);
@@ -167,16 +167,17 @@ export default function Home() {
 
     fetchProducts();
   }, [page]);
+
   // loctheo bán chạy nhất
   const displayProducts = isBestSeller
     ? [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0))
     : products;
+
   // tim category
   useEffect(() => {
     const fetchCategoryProducts = async () => {
       try {
         setLoading(true);
-
         const res = await apiProduct.getProductsByCategoryName(
           "Bàn Học",
           categoryPage,
@@ -201,7 +202,6 @@ export default function Home() {
     const fetchGhe = async () => {
       try {
         setLoading(true);
-
         const res = await apiProduct.getProductsByCategoryName(
           "Ghế công thái học",
           ghePage,
@@ -220,6 +220,7 @@ export default function Home() {
 
     fetchGhe();
   }, [ghePage]);
+
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -253,20 +254,12 @@ export default function Home() {
               key={index}
               className="relative h-32 cursor-pointer rounded-xl group"
             >
-              {/* IMAGE BACKGROUND */}
               <img
                 src={item.img}
                 alt={item.title}
                 className="absolute inset-0 object-cover w-full h-full transition duration-300 group-hover:scale-105"
               />
-
-              {/* OVERLAY */}
               <div className="absolute inset-0 bg-black/30"></div>
-
-              {/* TEXT */}
-              <div className="relative z-10 flex items-center h-full px-4">
-                {/* <p className="text-lg font-semibold text-white">{item.title}</p> */}
-              </div>
             </div>
           ))}
         </div>
@@ -295,13 +288,13 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
+
       {/* Sản phẩm 1  */}
       <div className="mt-10">
-        {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
             BÀN HỌC THÔNG MINH
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            <span className="ml-2 text-sm text-gray-500">({products.length} sản phẩm)</span>
           </h2>
 
           <div className="flex gap-2">
@@ -319,7 +312,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* sản phẩm 1 lấy tất cả */}
         <div>
           {loading ? (
             <p className="text-center">Đang tải...</p>
@@ -346,7 +338,6 @@ export default function Home() {
                       <ProductPrice product={item} />
                     </div>
 
-                    {/* 🔥 THÊM DÒNG NÀY */}
                     <p className="text-xs text-gray-400 mt-1">
                       Đã bán: {item.sold || 0}
                     </p>
@@ -363,7 +354,6 @@ export default function Home() {
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">
-            {/* PREV */}
             <button
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
@@ -371,8 +361,6 @@ export default function Home() {
             >
               Prev
             </button>
-
-            {/* PAGE */}
             {[...Array(totalPages)].map((_, i) => (
               <button
                 key={i}
@@ -384,8 +372,6 @@ export default function Home() {
                 {i + 1}
               </button>
             ))}
-
-            {/* NEXT */}
             <button
               disabled={page === totalPages}
               onClick={() => setPage(page + 1)}
@@ -393,15 +379,10 @@ export default function Home() {
             >
               Next
             </button>
-          </div>{" "}
-        </div>
-        {/* VIEW ALL */}
-        <div className="mt-6 text-center">
-          <button className="px-4 py-2 border rounded-lg hover:bg-gray-100">
-            Xem tất cả
-          </button>
+          </div>
         </div>
       </div>
+
       {/* BANNER 2 */}
       <div>
         <img
@@ -410,22 +391,20 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
-      {/* Sản phẩm 2  */}
+
+      {/* Sản phẩm 2 */}
       <div className="mt-10">
-        {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
-            BÀN HỌC THÔNG MINH
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            BÀN HỌC CAO CẤP
+            <span className="ml-2 text-sm text-gray-500">({categoryProducts.length} sản phẩm)</span>
           </h2>
-
           <div className="flex gap-2">
             <button className="px-3 py-1 text-sm text-white bg-blue-500 border rounded-lg">
               Tất Cả
             </button>
           </div>
         </div>
-        {/* sản phẩm 2 lấy theo danh mục*/}
         <div>
           {loading ? (
             <p className="text-center">Đang tải...</p>
@@ -442,16 +421,13 @@ export default function Home() {
                     alt={item.name}
                     className="object-cover w-full h-48"
                   />
-
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-2">
                       {item.name}
                     </p>
-
                     <div className="mt-2">
                       <ProductPrice product={item} />
                     </div>
-
                     <button
                       onClick={(e) => handleOrder(item, e)}
                       className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
@@ -464,7 +440,6 @@ export default function Home() {
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">
-            {/* PREV */}
             <button
               disabled={categoryPage === 1}
               onClick={() => setCategoryPage(categoryPage - 1)}
@@ -472,9 +447,7 @@ export default function Home() {
             >
               Prev
             </button>
-
-            {/* PAGE */}
-            {[...Array(totalPages)].map((_, i) => (
+            {[...Array(categoryTotalPages)].map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCategoryPage(i + 1)}
@@ -485,25 +458,17 @@ export default function Home() {
                 {i + 1}
               </button>
             ))}
-
-            {/* NEXT */}
             <button
-              disabled={categoryPage === totalPages}
+              disabled={categoryPage === categoryTotalPages}
               onClick={() => setCategoryPage(categoryPage + 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
               Next
             </button>
-          </div>{" "}
-        </div>
-
-        {/* VIEW ALL */}
-        <div className="mt-6 text-center">
-          <button className="px-4 py-2 border rounded-lg hover:bg-gray-100">
-            Xem tất cả
-          </button>
+          </div>
         </div>
       </div>
+
       {/* BANNER 3 */}
       <div>
         <img
@@ -512,22 +477,20 @@ export default function Home() {
           className="object-cover w-full h-full mt-8 rounded-2xl"
         />
       </div>
-      {/* Sản phẩm 3  */}
+
+      {/* Sản phẩm 3 */}
       <div className="mt-10">
-        {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
             GHẾ CÔNG THÁI HỌC
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            <span className="ml-2 text-sm text-gray-500">({gheProducts.length} sản phẩm)</span>
           </h2>
-
           <div className="flex gap-2">
             <button className="px-3 py-1 text-sm text-white bg-blue-500 border rounded-lg">
               Tất Cả
             </button>
           </div>
         </div>
-        {/* sản phẩm 3 lấy theo danh mục*/}
         <div>
           {loading ? (
             <p className="text-center">Đang tải...</p>
@@ -544,16 +507,13 @@ export default function Home() {
                     alt={item.name}
                     className="object-cover w-full h-48"
                   />
-
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-2">
                       {item.name}
                     </p>
-
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
-                    </p>
-
+                    <div className="mt-2">
+                      <ProductPrice product={item} />
+                    </div>
                     <button
                       onClick={(e) => handleOrder(item, e)}
                       className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
@@ -566,7 +526,6 @@ export default function Home() {
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">
-            {/* PREV */}
             <button
               disabled={ghePage === 1}
               onClick={() => setGhePage(ghePage - 1)}
@@ -574,9 +533,7 @@ export default function Home() {
             >
               Prev
             </button>
-
-            {/* PAGE */}
-            {[...Array(totalPages)].map((_, i) => (
+            {[...Array(gheTotalPages)].map((_, i) => (
               <button
                 key={i}
                 onClick={() => setGhePage(i + 1)}
@@ -587,25 +544,17 @@ export default function Home() {
                 {i + 1}
               </button>
             ))}
-
-            {/* NEXT */}
             <button
-              disabled={ghePage === totalPages}
+              disabled={ghePage === gheTotalPages}
               onClick={() => setGhePage(ghePage + 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
               Next
             </button>
-          </div>{" "}
-        </div>
-
-        {/* VIEW ALL */}
-        <div className="mt-6 text-center">
-          <button className="px-4 py-2 border rounded-lg hover:bg-gray-100">
-            Xem tất cả
-          </button>
+          </div>
         </div>
       </div>
+
       {/* Product Details Modal */}
       <Modal
         isOpen={!!selectedProductForDetails}
@@ -651,19 +600,7 @@ export default function Home() {
                     ? "Còn hàng"
                     : "Hết hàng"}
                 </p>
-                <p>
-                  <span className="font-medium">Thương hiệu: </span>{" "}
-                  {selectedProductForDetails.seller_id === "admin"
-                    ? "Chính hãng"
-                    : "Đối tác"}
-                </p>
               </div>
-
-              <p className="mt-4 text-sm text-gray-600">
-                Sản phẩm cao cấp được thiết kế đặc biệt mang lại sự thoải mái
-                tối đa cho người sử dụng. Phù hợp cho không gian làm việc chuyên
-                nghiệp.
-              </p>
 
               <button
                 onClick={(e) => {
@@ -810,7 +747,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Total */}
             <div className="pt-4 mt-6 border-t">
               <div className="flex items-center justify-between mb-4">
                 <span className="font-semibold text-gray-700">

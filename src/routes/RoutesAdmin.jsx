@@ -30,7 +30,7 @@ export default function RoutesAdmin() {
         }
       />
       <Route
-        path="/admin/quan-ly-san-pham"
+        path="/admin/products"
         element={
           <AdminLayout>
             <ProductManagementAdmin />

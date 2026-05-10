@@ -1,137 +1,133 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Input from "../components/common/Input";
+import { useState } from "react";
 import authApi from "../api/authApi";
+import { toast } from "react-toastify";
+import { useNavigate, Link } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 
-export default function LoginSeller() {
+const LoginSeller = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const setUser = useAuthStore((s) => s.setUser);
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    setErrorMsg("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg("");
-
+  const handleLogin = async () => {
+    if (!email || !password) {
+      toast.error("Vui lòng nhập email và mật khẩu.");
+      return;
+    }
     try {
-      const res = await authApi.loginSeller(form);
-      const { token, user } = res;
+      const res = await authApi.loginSeller({ email, password });
 
-      // Kiểm tra role phải là 'seller'
-      if (user?.role !== "seller") {
-        setErrorMsg("Tài khoản này không phải Seller. Vui lòng dùng trang đăng nhập khác.");
+      // Kiểm tra quyền hạn (Role check)
+      if (res.user?.role !== "seller") {
+        toast.error("Bạn không có quyền đăng nhập vào Kênh Người Bán. Vui lòng đăng ký Seller trước!");
         return;
       }
 
-      // Lưu token riêng, user qua store (store tự sync localStorage)
-      localStorage.setItem("token", token);
-      setUser(user);
-
+      toast.success(res.message || "Đăng nhập Seller thành công!");
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      setUser(res.user);
+      
       window.dispatchEvent(new Event("auth-change"));
+
+      // Redirect to seller dashboard
       navigate("/seller");
     } catch (error) {
-      console.error(error);
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Đăng nhập thất bại. Vui lòng kiểm tra lại Email và Mật khẩu.";
-      setErrorMsg(msg);
-    } finally {
-      setLoading(false);
+      const errorMsg = error.response?.data?.message;
+      if (errorMsg === "Email hoặc mật khẩu không chính xác") {
+        toast.error("Bạn không phải là Seller hoặc không có quyền truy cập vào kênh này.");
+      } else {
+        toast.error(errorMsg || "Đăng nhập thất bại. Vui lòng kiểm tra lại!");
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex p-4 justify-center bg-gradient-to-br from-blue-100 to-orange-100 px-4">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-        {/* LEFT */}
-        <div className="hidden md:flex flex-col justify-center items-center bg-orange-500 text-white p-8">
-          <h2 className="text-3xl font-bold mb-4">Chào mừng trở lại 👋</h2>
-          <p className="text-center text-sm opacity-90">
-            Đăng nhập để quản lý cửa hàng và đơn hàng của bạn.
-          </p>
-        </div>
-
-        {/* RIGHT FORM */}
-        <div className="p-8">
-          <h1 className="text-2xl font-semibold mb-6 text-center">
-            Đăng nhập Seller
+    <div className="flex min-h-screen">
+      {/* LEFT */}
+      <div className="hidden lg:flex w-1/2 bg-orange-500 text-white pt-[200px] justify-center">
+        <div className="px-10">
+          <h1 className="text-4xl font-bold leading-tight">
+            Kênh Người Bán <br />
+            <span className="text-yellow-400">Quản lý Cửa hàng</span> của bạn
           </h1>
+          <p className="mt-4">Tiếp cận hàng triệu khách hàng cùng TLDQ-GO</p>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* ERROR */}
-            {errorMsg && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-200">
-                {errorMsg}
-              </div>
-            )}
+      {/* RIGHT */}
+      <div className="w-full lg:w-1/2 flex pt-[100px] justify-center bg-gray-50">
+        <div className="w-full max-w-md p-6">
+          <div className="text-center mb-8">
+            <div className="bg-orange-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+              <span className="text-white text-xl font-bold">S</span>
+            </div>
+            <h2 className="text-2xl font-semibold">Đăng nhập Người bán</h2>
+          </div>
 
-            {/* EMAIL */}
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
+          {/* Form */}
+          <div className="space-y-4">
+            <Input
+              placeholder="Email người bán"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
 
-            {/* PASSWORD */}
-            <input
-              type="password"
-              name="password"
-              placeholder="Mật khẩu"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-              required
-            />
-
-            {/* SUBMIT */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Đăng nhập..." : "Đăng nhập"}
-            </button>
-
-            {/* LINK REGISTER */}
-            <p className="text-center text-sm text-gray-600">
-              Chưa có tài khoản?{" "}
-              <Link
-                to="/register-seller"
-                className="text-orange-500 font-medium hover:underline"
+            {/* Password with toggle */}
+            <div className="relative">
+              <Input
+                placeholder="Mật khẩu"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute cursor-pointer right-3 top-3 text-xl"
               >
-                Đăng ký Seller
+                {showPassword ? "🙈" : "👁"}
+              </span>
+            </div>
+
+            {/* Buttons */}
+            <div className="pt-2">
+              <button
+                onClick={handleLogin}
+                className="w-full font-semibold text-white transition bg-orange-500 hover:bg-orange-600 rounded-lg py-3 shadow-md"
+              >
+                Đăng nhập
+              </button>
+            </div>
+
+            <p className="text-center text-sm text-gray-600 pt-2">
+              Chưa có tài khoản bán hàng?
+              <Link to="/register-seller">
+                <span className="text-orange-500 ml-1 font-medium hover:underline">
+                  Đăng ký ngay
+                </span>
               </Link>
             </p>
 
-            {/* BACK */}
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="w-full border py-3 rounded-lg hover:bg-gray-100"
-            >
-              Quay lại
-            </button>
-          </form>
+            {/* Forgot */}
+            <p className="text-sm text-center pt-2">
+              <Link to="/forgot-password" text-orange-500 hover:underline>
+                Quên mật khẩu?
+              </Link>
+            </p>
+
+            <div className="pt-6 text-center">
+               <Link to="/" className="text-xs text-gray-400 hover:text-orange-500 transition">
+                  Quay lại trang chủ mua sắm
+               </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default LoginSeller;

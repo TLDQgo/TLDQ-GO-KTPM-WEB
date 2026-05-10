@@ -1,3 +1,14 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+.next/
+out/
+
 # Logs
 logs
 *.log
@@ -7,16 +18,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
@@ -29,7 +44,26 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+*.env.local
 
-# Uploads (Ảnh đại diện người dùng tải lên)
+# Vite specific
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Uploads & Assets
 public/uploads/*
 !public/uploads/.gitkeep
+src/assets/uploads/*
+!src/assets/uploads/.gitkeep
+
+# Testing
+/coverage
+/.nyc_output
+
+# Temporary files
+.cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+.parcel-cache
+.turbo/

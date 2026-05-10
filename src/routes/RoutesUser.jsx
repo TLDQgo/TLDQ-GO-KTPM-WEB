@@ -5,7 +5,6 @@ import Cart from "../pages/Cart";
 import { UserLayout } from "./DashBoardLayout";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
-
 import Profile from "../pages/Profile";
 import RegisterSeller from "../pages/RegisterSeller";
 import LoginSeller from "../pages/LoginSeller";

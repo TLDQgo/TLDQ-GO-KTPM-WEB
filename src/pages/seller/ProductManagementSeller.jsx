@@ -11,6 +11,7 @@ export default function ProductManagementSeller() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editImage, setEditImage] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState("");
+
   const [editForm, setEditForm] = useState({
     name: "",
     price: "",
@@ -25,11 +26,8 @@ export default function ProductManagementSeller() {
     if (!sellerId) return;
     try {
       const res = await productApi.getProductsBySeller(sellerId, pageNumber);
-
-      console.log("API response:", res);
-
-      setProducts(res.data);
-      setPagination(res.pagination);
+      setProducts(res.data || []);
+      setPagination(res.pagination || {});
     } catch (error) {
       console.error("Lỗi fetch products:", error);
     }
@@ -38,15 +36,12 @@ export default function ProductManagementSeller() {
   useEffect(() => {
     fetchProducts(page);
   }, [page, sellerId]);
+
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xoá sản phẩm này?")) return;
-
     try {
       await productApi.delete(id);
-
-      // 👉 update UI ngay (không cần gọi lại API)
       setProducts((prev) => prev.filter((item) => item._id !== id));
-
       alert("✅ Xoá thành công");
     } catch (error) {
       console.error("Lỗi xoá:", error);
@@ -75,12 +70,10 @@ export default function ProductManagementSeller() {
   const handleEditImageChange = (e) => {
     const file = e.target.files?.[0] || null;
     setEditImage(file);
-
     if (file) {
       setEditImagePreview(URL.createObjectURL(file));
       return;
     }
-
     setEditImagePreview(editingProduct?.images?.[0] || "");
   };
 
@@ -100,14 +93,15 @@ export default function ProductManagementSeller() {
       }
 
       const res = await productApi.update(editingProduct._id, payload);
-      const updatedProduct = res?.data || payload;
-
+      
+      // Update local state to reflect changes without full reload
+      const updatedProductFromServer = res?.data;
       setProducts((prev) =>
         prev.map((item) =>
           item._id === editingProduct._id
-            ? { ...item, ...updatedProduct, category_id: item.category_id }
-            : item,
-        ),
+            ? { ...item, ...updatedProductFromServer }
+            : item
+        )
       );
 
       setIsEditOpen(false);
@@ -126,7 +120,6 @@ export default function ProductManagementSeller() {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Quản lý sản phẩm</h1>
-
         <div className="text-sm text-gray-500">
           Tổng sản phẩm:{" "}
           <span className="text-red-500">{pagination.totalItems || 0}</span>
@@ -155,7 +148,6 @@ export default function ProductManagementSeller() {
               <th className="p-3">Thao tác</th>
             </tr>
           </thead>
-
           <tbody>
             {products.map((item) => (
               <tr key={item._id} className="border-t hover:bg-gray-50">
@@ -167,17 +159,13 @@ export default function ProductManagementSeller() {
                   />
                   <span>{item.name}</span>
                 </td>
-
                 <td className="p-3 text-center text-red-500 font-semibold">
                   {item.price?.toLocaleString()}đ
                 </td>
-
                 <td className="p-3 text-center">
                   {item.category_id?.name || "Chưa có"}
                 </td>
-
                 <td className="p-3 text-center">{item.stock_quantity}</td>
-
                 <td className="p-3">
                   <div className="flex justify-center gap-2">
                     <button
@@ -186,15 +174,6 @@ export default function ProductManagementSeller() {
                     >
                       ✏️
                     </button>
-                    <a
-                      href={`/?productId=${item._id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2 py-1 border rounded inline-flex items-center justify-center"
-                      title="Xem bên phía user"
-                    >
-                      👁
-                    </a>
                     <button
                       onClick={() => handleDelete(item._id)}
                       className="px-2 py-1 border text-red-500 rounded hover:bg-red-50"
@@ -211,32 +190,26 @@ export default function ProductManagementSeller() {
 
       {/* PAGINATION */}
       <div className="flex justify-end mt-4 gap-2">
-        {/* PREV */}
         <button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
-          className="px-3 py-1 border rounded"
+          className="px-3 py-1 border rounded disabled:opacity-50"
         >
           Prev
         </button>
-
-        {/* PAGE NUMBERS */}
         {[...Array(pagination.totalPages || 1)].map((_, i) => (
           <button
             key={i}
             onClick={() => setPage(i + 1)}
-            className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-red-500 text-white" : ""
-              }`}
+            className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-red-500 text-white" : ""}`}
           >
             {i + 1}
           </button>
         ))}
-
-        {/* NEXT */}
         <button
           disabled={page === pagination.totalPages}
           onClick={() => setPage(page + 1)}
-          className="px-3 py-1 border rounded"
+          className="px-3 py-1 border rounded disabled:opacity-50"
         >
           Next
         </button>
@@ -264,7 +237,6 @@ export default function ProductManagementSeller() {
               required
             />
           </div>
-
           <div>
             <label className="block mb-1 text-sm font-medium">Giá</label>
             <input
@@ -277,7 +249,6 @@ export default function ProductManagementSeller() {
               required
             />
           </div>
-
           <div>
             <label className="block mb-1 text-sm font-medium">Số lượng</label>
             <input
@@ -290,7 +261,6 @@ export default function ProductManagementSeller() {
               required
             />
           </div>
-
           <div>
             <label className="block mb-1 text-sm font-medium">Mô tả</label>
             <textarea
@@ -301,16 +271,14 @@ export default function ProductManagementSeller() {
               rows={4}
             />
           </div>
-
           <div>
-            <label className="block mb-1 text-sm font-medium">Ảnh sản phẩm (cập nhật 1 ảnh)</label>
+            <label className="block mb-1 text-sm font-medium">Ảnh sản phẩm</label>
             <input
               type="file"
               accept="image/*"
               onChange={handleEditImageChange}
-              className="w-full"
+              className="w-full text-sm"
             />
-
             {editImagePreview && (
               <img
                 src={editImagePreview}
@@ -319,7 +287,6 @@ export default function ProductManagementSeller() {
               />
             )}
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"

@@ -33,12 +33,10 @@ export default function OrderManagementSeller() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["sellerOrders", sellerId],
     queryFn: () => orderApi.getOrdersBySeller(sellerId),
-    // Chỉ fetch khi có sellerId thực (đã đăng nhập thật)
     enabled: !!sellerId && sellerId !== "system",
   });
 
   useEffect(() => {
-    // axiosClient unwraps response.data nên data từ query là { success, data: [...] }
     const list = data?.data ?? data;
     if (Array.isArray(list)) {
       setOrders(list);
@@ -52,12 +50,9 @@ export default function OrderManagementSeller() {
       await queryClient.cancelQueries({ queryKey: ["sellerOrders", sellerId] });
       const previousOrders = queryClient.getQueryData(["sellerOrders", sellerId]);
 
-      // Optimistic update via Zustand
       updateOrderStatusLocally(orderId, status);
 
-      // Optimistic update in React Query cache
       queryClient.setQueryData(["sellerOrders", sellerId], (old) => {
-        // handle both { data: [...] } and plain array
         const list = old?.data ?? old;
         if (!Array.isArray(list)) return old;
         const updated = list.map((order) =>
@@ -74,7 +69,8 @@ export default function OrderManagementSeller() {
           ["sellerOrders", sellerId],
           context.previousOrders
         );
-        setOrders(context.previousOrders.data);
+        const list = context.previousOrders?.data ?? context.previousOrders;
+        if (Array.isArray(list)) setOrders(list);
       }
       alert("Lỗi cập nhật trạng thái đơn: " + err.message);
     },
@@ -174,16 +170,13 @@ export default function OrderManagementSeller() {
                           <div key={item.product_id} className="text-sm text-gray-700">
                             <span className="font-medium">{item.product_name}</span>
                             <span className="text-gray-500 ml-1">×{item.quantity}</span>
-                            <span className="text-red-500 ml-1 text-xs font-semibold">
-                              {item.price?.toLocaleString("vi-VN")}đ
-                            </span>
                           </div>
                         ))}
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="font-bold text-red-600">
-                        {order.total_amount?.toLocaleString() || 0} đ
+                        {order.total_amount?.toLocaleString()} đ
                       </div>
                     </td>
                     <td className="p-4">

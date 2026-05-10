@@ -41,6 +41,6 @@ axiosClient.interceptors.response.use(
   }
 );
 
-// Re-export cho backward compatibility
+// Export for different modules (backward compatibility)
 export { axiosClient as userApiClient, axiosClient as productApiClient, axiosClient as orderApiClient };
 export default axiosClient;

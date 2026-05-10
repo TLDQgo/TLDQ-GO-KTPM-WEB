@@ -36,33 +36,11 @@ const addAuthToken = (config) => {
   return config;
 };
 
-axiosClient.interceptors.request.use((config) => {
-  // #region debug-log
-  console.log("[API Request]", config.method?.toUpperCase(), config.url);
-  console.log("[API Full URL]", config.baseURL + config.url);
-  // #endregion
-  return addAuthToken(config);
-});
+axiosClient.interceptors.request.use(addAuthToken);
 
-axiosClient.interceptors.response.use(
-  (response) => {
-    if (response && response.data) {
-      return response.data;
-    }
-    return response;
-  },
-  (error) => {
-    // #region debug-log
-    if (error.config) {
-      console.log("[API Error]", error.config.method?.toUpperCase(), error.config.url);
-      console.log("[API Error Full URL]", error.config.baseURL + error.config.url);
-      console.log("[API Error]", error.message);
-    }
-    // #endregion
-    throw error;
-  }
-);
+// Individual clients for compatibility if needed
+export const userApiClient = axiosClient;
+export const productApiClient = axiosClient;
+export const orderApiClient = axiosClient;
 
-// Re-export cho backward compatibility
-export { axiosClient as userApiClient, axiosClient as productApiClient, axiosClient as orderApiClient };
 export default axiosClient;

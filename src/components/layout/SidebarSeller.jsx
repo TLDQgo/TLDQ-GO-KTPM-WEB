@@ -32,15 +32,13 @@ export default function SidebarSeller() {
 
   return (
     <div className="w-[260px] h-full bg-white p-4 fixed top-[60px] left-0 pt-6 border-r border-gray-200">
-      {/* TITLE */}
-
       {/* MENU */}
       <ul className="flex flex-col space-y-2 text-sm">
         <Link to="/seller">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "home"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("home")}
@@ -52,9 +50,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/quan-ly-san-pham">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "products"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("products")}
@@ -66,9 +64,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/orders">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "orders"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("orders")}
@@ -80,9 +78,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/thong-ke">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "stats"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("stats")}
@@ -94,9 +92,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/promotions">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "promotions"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("promotions")}
@@ -108,9 +106,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/shipping">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "shipping"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("shipping")}
@@ -122,9 +120,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/finance">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "finance"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("finance")}
@@ -136,9 +134,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/settings">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "settings"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("settings")}
@@ -150,9 +148,9 @@ export default function SidebarSeller() {
 
         <Link to="/seller/support">
           <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
               activeItem === "support"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 text-red-500 font-semibold"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
             onClick={() => handleItemClick("support")}
@@ -164,7 +162,7 @@ export default function SidebarSeller() {
 
         {/* LOGOUT */}
         <li
-          className="flex items-center gap-3 p-2 mt-4 text-red-500 rounded-md cursor-pointer hover:bg-red-50"
+          className="flex items-center gap-3 p-2 mt-4 text-red-500 rounded-md cursor-pointer hover:bg-red-50 transition"
           onClick={handleLogout}
         >
           <LogOut size={18} />

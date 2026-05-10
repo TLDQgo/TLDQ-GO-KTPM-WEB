@@ -47,7 +47,6 @@ const authApi = {
       },
     });
   },
-
   getSellerPublicProfile: (sellerId) =>
     axiosClient.get(`users/seller/${sellerId}/profile`),
 

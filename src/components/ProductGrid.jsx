@@ -15,17 +15,17 @@ export default function ProductGrid({
   const fetchProducts = async () => {
     try {
       setLoading(true);
-
       let res;
-
       if (categoryName) {
-        res = await productApi.getByCategoryName(categoryName, page);
+        res = await productApi.getProductsByCategoryName(categoryName, page);
       } else {
         res = await productApi.getProductsWithPage(page);
       }
 
-      setProducts(res.data);
-      setPagination(res.pagination);
+      if (res && res.data) {
+        setProducts(res.data);
+        setPagination(res.pagination || {});
+      }
     } catch (err) {
       console.error("Lỗi load sản phẩm:", err);
     } finally {
@@ -52,7 +52,7 @@ export default function ProductGrid({
           <div
             key={item._id}
             onClick={() => onClickItem(item)}
-            className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
+            className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg h-full flex flex-col"
           >
             <img
               src={item.images?.[0] || "https://via.placeholder.com/150"}
@@ -60,59 +60,61 @@ export default function ProductGrid({
               className="object-cover w-full h-48"
             />
 
-            <div className="p-3">
-              <p className="h-10 text-sm font-medium line-clamp-2">
+            <div className="p-3 flex flex-col flex-1">
+              <p className="text-sm font-medium line-clamp-2 h-10 mb-2">
                 {item.name}
               </p>
 
-              <div className="mt-2">
+              <div className="mt-auto">
                 <ProductPrice product={item} />
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOrder(item, e);
+                  }}
+                  className="w-full py-2 mt-3 text-xs border rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200 font-medium"
+                >
+                  Đặt hàng
+                </button>
               </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOrder(item, e);
-                }}
-                className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white"
-              >
-                Đặt hàng
-              </button>
             </div>
           </div>
         ))}
       </div>
 
       {/* PAGINATION */}
-      <div className="flex justify-center mt-6 gap-2">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-          className="px-3 py-1 border rounded"
-        >
-          Prev
-        </button>
-
-        {[...Array(pagination.totalPages || 1)].map((_, i) => (
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-center mt-8 gap-2">
           <button
-            key={i}
-            onClick={() => setPage(i + 1)}
-            className={`px-3 py-1 border rounded ${
-              page === i + 1 ? "bg-blue-500 text-white" : ""
-            }`}
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50 transition"
           >
-            {i + 1}
+            Trước
           </button>
-        ))}
 
-        <button
-          disabled={page === pagination.totalPages}
-          onClick={() => setPage(page + 1)}
-          className="px-3 py-1 border rounded"
-        >
-          Next
-        </button>
-      </div>
+          {[...Array(pagination.totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`w-10 h-10 border rounded-lg transition ${
+                page === i + 1 ? "bg-blue-600 text-white font-bold" : "hover:bg-gray-50"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={page === pagination.totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50 transition"
+          >
+            Sau
+          </button>
+        </div>
+      )}
     </div>
   );
 }

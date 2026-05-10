@@ -21,6 +21,7 @@ const UserLayout = ({ children }) => {
   );
 };
 export { UserLayout };
+
 const SellerLayout = ({ children }) => {
   return (
     <>
@@ -48,6 +49,7 @@ const SellerLayout = ({ children }) => {
   );
 };
 export { SellerLayout };
+
 const AdminLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-100">

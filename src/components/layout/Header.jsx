@@ -8,7 +8,6 @@ import cartApi from "../../api/cartApi";
 const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const setUserStore = useAuthStore((s) => s.setUser);
 
   const { data: cartData } = useQuery({
     queryKey: ["cart", user?._id],
@@ -16,6 +15,7 @@ const Header = () => {
     enabled: !!user?._id,
     staleTime: 30000,
   });
+
   const cartCount = (cartData?.data ?? cartData)?.items?.reduce(
     (sum, item) => sum + item.quantity,
     0,
@@ -45,9 +45,10 @@ const Header = () => {
     localStorage.removeItem("user");
     setUser(null);
     navigate("/");
+    window.dispatchEvent(new Event("auth-change"));
   };
+
   const handleSellerClick = () => {
-    // Lấy thông tin mới nhất từ localStorage
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
     if (storedUser?.role === "seller") {
       window.location.href = "/seller";
@@ -55,6 +56,7 @@ const Header = () => {
       window.location.href = "/register-seller";
     }
   };
+
   return (
     <header className="w-full border-b bg-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
@@ -71,9 +73,9 @@ const Header = () => {
           <a href="#" className="hover:text-blue-600">
             Giới Thiệu
           </a>
-          <a href="#" className="hover:text-blue-600">
+          <Link to="/" className="hover:text-blue-600">
             Sản Phẩm
-          </a>
+          </Link>
           <a href="#" className="hover:text-blue-600">
             Liên Hệ
           </a>
@@ -99,10 +101,11 @@ const Header = () => {
 
           <button
             onClick={handleSellerClick}
-            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium"
           >
             Nhà Bán hàng
           </button>
+
           {user ? (
             <>
               {/* USER */}
@@ -114,35 +117,32 @@ const Header = () => {
                   <img
                     src={user.avatar_url}
                     alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover border"
                     onError={(e) => {
                       e.target.style.display = "none";
                     }}
                   />
                 )}
-                Chào, {user.full_name || user.email}
+                <span className="text-sm hidden sm:inline">Chào, {user.full_name || user.email}</span>
               </Link>
 
               {/* LOGOUT */}
               <button
                 onClick={handleLogout}
-                className="border px-4 py-2 rounded-lg text-red-600 border-red-600 hover:bg-red-50 transition"
+                className="border px-3 py-2 rounded-lg text-red-600 border-red-600 hover:bg-red-50 transition text-sm"
               >
                 Đăng Xuất
               </button>
             </>
           ) : (
             <>
-              {/* LOGIN BUTTON */}
               <Link to="/login">
-                <button className="border px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                <button className="border px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm">
                   Đăng Nhập
                 </button>
               </Link>
-
-              {/* REGISTER */}
               <Link to="/register">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                   Đăng Ký
                 </button>
               </Link>

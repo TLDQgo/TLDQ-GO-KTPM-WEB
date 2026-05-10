@@ -31,7 +31,7 @@ export default function RoutesSeller() {
         }
       />
       <Route
-        path="/seller/quan-ly-san-pham"
+        path="/seller/products"
         element={
           <SellerPrivateRoute>
             <SellerLayout>
@@ -41,7 +41,7 @@ export default function RoutesSeller() {
         }
       />
       <Route
-        path="/seller/them-san-pham"
+        path="/seller/products/new"
         element={
           <SellerPrivateRoute>
             <SellerLayout>
@@ -61,17 +61,7 @@ export default function RoutesSeller() {
         }
       />
       <Route
-        path="/seller/settings"
-        element={
-          <SellerPrivateRoute>
-            <SellerLayout>
-              <SellerSettings />
-            </SellerLayout>
-          </SellerPrivateRoute>
-        }
-      />
-      <Route
-        path="/seller/promotions"
+        path="/seller/vouchers"
         element={
           <SellerPrivateRoute>
             <SellerLayout>
@@ -81,11 +71,21 @@ export default function RoutesSeller() {
         }
       />
       <Route
-        path="/seller/thong-ke"
+        path="/seller/revenue"
         element={
           <SellerPrivateRoute>
             <SellerLayout>
               <RevenueStatsSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
+        }
+      />
+      <Route
+        path="/seller/settings"
+        element={
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <SellerSettings />
             </SellerLayout>
           </SellerPrivateRoute>
         }

@@ -12,6 +12,7 @@ import {
 const NAV = [
   { key: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
   { key: "/admin/users", label: "Quản lý người dùng", icon: Users },
+  { key: "/admin/quan-ly-san-pham", label: "Quản lý sản phẩm", icon: Package },
   { key: "/admin/stats", label: "Thống kê hệ thống", icon: BarChart2 },
 ];
 

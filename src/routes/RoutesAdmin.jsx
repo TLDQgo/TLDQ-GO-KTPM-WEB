@@ -4,6 +4,7 @@ import HomeAdmin from "../pages/admin/HomeAdmin";
 import UserManagement from "../pages/admin/UserManagement";
 import SystemStats from "../pages/admin/SystemStats";
 import LoginAdmin from "../pages/admin/LoginAdmin";
+import ProductManagementAdmin from "../pages/admin/ProductManagementAdmin";
 
 export default function RoutesAdmin() {
   return (
@@ -25,6 +26,14 @@ export default function RoutesAdmin() {
         element={
           <AdminLayout>
             <UserManagement />
+          </AdminLayout>
+        }
+      />
+      <Route
+        path="/admin/quan-ly-san-pham"
+        element={
+          <AdminLayout>
+            <ProductManagementAdmin />
           </AdminLayout>
         }
       />

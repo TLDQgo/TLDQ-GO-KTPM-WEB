@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://127.0.0.1:3000/api";
+const API = "http://localhost:3002";
 
 export default function ProductManagementAdmin() {
   const [products, setProducts] = useState([]);

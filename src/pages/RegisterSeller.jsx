@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import authApi from "../api/authApi";
 import useAuthStore from "../store/useAuthStore";
@@ -19,6 +19,19 @@ export default function RegisterSeller() {
     confirmPassword: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // Lấy key duy nhất của lần điều hướng này từ react-router
+    const navigationKey = location.key || "initial";
+    const lastReloadedKey = sessionStorage.getItem("last_reload_key");
+
+    if (lastReloadedKey !== navigationKey) {
+      sessionStorage.setItem("last_reload_key", navigationKey);
+      window.location.reload();
+    }
+  }, [location.key]);
 
   useEffect(() => {
     if (!isCustomerLoggedIn) return;
@@ -82,15 +95,15 @@ export default function RegisterSeller() {
 
       toast.success(
         res?.message ||
-          "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.",
+        "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.",
       );
       navigate("/login-seller");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          (isCustomerLoggedIn
-            ? "Nâng cấp tài khoản seller thất bại"
-            : "Đăng ký seller thất bại"),
+        (isCustomerLoggedIn
+          ? "Nâng cấp tài khoản seller thất bại"
+          : "Đăng ký seller thất bại"),
       );
     } finally {
       setSubmitting(false);
@@ -206,7 +219,7 @@ export default function RegisterSeller() {
                 ? "Đang xử lý..."
                 : isCustomerLoggedIn
                   ? "Nâng cấp Seller"
-                  : "Đăng ký Seller"}
+                  : "Bạn đã có tài khoản?"}
               <Link
                 to="/login-seller"
                 className="text-orange-500 font-medium hover:underline"

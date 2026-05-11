@@ -47,13 +47,23 @@ const Header = () => {
     navigate("/");
   };
   const handleSellerClick = () => {
-    // if (user?.role === "seller") {
-    //   navigate("/seller");
-    // } else {
-    //   navigate("/register-seller");
-    // }
-    navigate("/register-seller");
+    if (user?.role === "seller") {
+      navigate("/seller");
+    } else {
+      navigate("/register-seller");
+    }
   };
+  const getImageUrl = (url) => {
+    if (!url) return "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+    if (url.startsWith("http") || url.startsWith("blob:")) return url;
+    const baseUrl = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? (import.meta.env.VITE_API_URL || "http://localhost:3000")
+      : (import.meta.env.VITE_API_URL || "");
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${cleanBaseUrl}${cleanUrl}`;
+  };
+
   return (
     <header className="w-full border-b bg-white">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
@@ -109,16 +119,14 @@ const Header = () => {
                 to="/profile"
                 className="font-semibold text-gray-700 hover:text-blue-600 transition flex items-center gap-2"
               >
-                {user.avatar_url && (
-                  <img
-                    src={user.avatar_url}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                )}
+                <img
+                  src={getImageUrl(user.avatar_url)}
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full object-cover bg-gray-100"
+                  onError={(e) => {
+                    e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+                  }}
+                />
                 Chào, {user.full_name || user.email}
               </Link>
 

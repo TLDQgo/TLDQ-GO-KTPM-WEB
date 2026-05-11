@@ -47,6 +47,17 @@ export default function SellerSettings() {
   });
 
   // Load existing shop data
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob:")) return url;
+    const baseUrl = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+      ? (import.meta.env.VITE_API_URL || "http://localhost:3000")
+      : (import.meta.env.VITE_API_URL || "");
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${cleanBaseUrl}${cleanUrl}`;
+  };
+
   useEffect(() => {
     const fetchShopData = async () => {
       if (!user || user.role !== "seller") {
@@ -84,6 +95,27 @@ export default function SellerSettings() {
   const handleShopChange = (e) => {
     const { name, value } = e.target;
     setShopForm({ ...shopForm, [name]: value });
+  };
+
+  const handleFileUpload = async (e, fieldName) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      toast.info("Đang tải ảnh lên...");
+      const res = await authApi.uploadAvatar(formData);
+      const imageUrl = res?.avatar_url || res?.url;
+      if (imageUrl) {
+        setShopForm((prev) => ({ ...prev, [fieldName]: imageUrl }));
+        // Không hiện thông báo thành công theo yêu cầu
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi tải ảnh lên");
+    }
   };
 
   const handleShopSubmit = async (e) => {
@@ -237,11 +269,10 @@ export default function SellerSettings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeTab === tab.id
+                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
                         ? "text-blue-600 border-b-2 border-blue-600"
                         : "text-gray-500 hover:text-gray-700"
-                    }`}
+                      }`}
                   >
                     <Icon size={18} />
                     {tab.label}
@@ -261,19 +292,21 @@ export default function SellerSettings() {
                   <div className="relative h-32 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl overflow-hidden mb-4">
                     {shopForm.banner_url && (
                       <img
-                        src={shopForm.banner_url}
+                        key={shopForm.banner_url}
+                        src={getImageUrl(shopForm.banner_url)}
                         alt="Banner"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                        className="w-full h-full object-cover bg-gray-200"
+                        onError={(e) => { e.target.src = "https://via.placeholder.com/600x200?text=Banner+Loi"; }}
                       />
                     )}
                     <div className="absolute bottom-4 left-4 flex items-center gap-3">
                       {shopForm.logo_url ? (
                         <img
-                          src={shopForm.logo_url}
+                          key={shopForm.logo_url}
+                          src={getImageUrl(shopForm.logo_url)}
                           alt="Logo"
                           className="w-16 h-16 rounded-full border-2 border-white object-cover bg-white"
-                          onError={(e) => { e.target.style.display = "none"; }}
+                          onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Logo+Loi"; }}
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center">
@@ -343,33 +376,101 @@ export default function SellerSettings() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">
                     Thông tin bổ sung
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Logo cửa hàng (URL)
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* LOGO SECTION */}
+                    <div className="space-y-3">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Logo cửa hàng
                       </label>
-                      <input
-                        type="url"
-                        name="logo_url"
-                        value={shopForm.logo_url}
-                        onChange={handleShopChange}
-                        placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <div className="flex flex-col items-center gap-4">
+                        {/* Square Preview Area for Logo */}
+                        <label className="relative w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition overflow-hidden group">
+                          {shopForm.logo_url ? (
+                            <img
+                              src={getImageUrl(shopForm.logo_url)}
+                              alt="Logo Preview"
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Logo+Loi"; }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center text-gray-400">
+                              <Store size={32} />
+                              <span className="text-[10px] mt-2 font-medium">Chọn ảnh</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="text-white text-xs font-medium">Thay đổi</span>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, "logo_url")}
+                          />
+                        </label>
+
+                        <div className="w-full">
+                          <label className="text-[11px] text-gray-500 mb-1 block">Hoặc dán URL logo:</label>
+                          <input
+                            type="text"
+                            name="logo_url"
+                            value={shopForm.logo_url}
+                            onChange={handleShopChange}
+                            placeholder="https://example.com/logo.png"
+                            className="w-full px-3 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Banner cửa hàng (URL)
+
+                    {/* BANNER SECTION */}
+                    <div className="space-y-3">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Banner cửa hàng
                       </label>
-                      <input
-                        type="url"
-                        name="banner_url"
-                        value={shopForm.banner_url}
-                        onChange={handleShopChange}
-                        placeholder="https://example.com/banner.png"
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <div className="flex flex-col items-center gap-4">
+                        {/* Rectangle Preview Area for Banner */}
+                        <label className="relative w-full h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition overflow-hidden group">
+                          {shopForm.banner_url ? (
+                            <img
+                              src={getImageUrl(shopForm.banner_url)}
+                              alt="Banner Preview"
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.src = "https://via.placeholder.com/600x200?text=Banner+Loi"; }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center text-gray-400">
+                              <AlertCircle size={32} />
+                              <span className="text-[10px] mt-2 font-medium">Chọn ảnh banner</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="text-white text-xs font-medium">Thay đổi</span>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, "banner_url")}
+                          />
+                        </label>
+
+                        <div className="w-full">
+                          <label className="text-[11px] text-gray-500 mb-1 block">Hoặc dán URL banner:</label>
+                          <input
+                            type="text"
+                            name="banner_url"
+                            value={shopForm.banner_url}
+                            onChange={handleShopChange}
+                            placeholder="https://example.com/banner.png"
+                            className="w-full px-3 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email cửa hàng
@@ -534,14 +635,12 @@ export default function SellerSettings() {
                     <button
                       type="button"
                       onClick={() => handleNotificationToggle(item.key)}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${
-                        notifications[item.key] ? "bg-blue-600" : "bg-gray-300"
-                      }`}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${notifications[item.key] ? "bg-blue-600" : "bg-gray-300"
+                        }`}
                     >
                       <span
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                          notifications[item.key] ? "left-7" : "left-1"
-                        }`}
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications[item.key] ? "left-7" : "left-1"
+                          }`}
                       />
                     </button>
                   </div>

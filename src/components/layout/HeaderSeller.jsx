@@ -14,12 +14,23 @@ export default function HeaderSeller() {
     navigate("/login-seller");
   };
 
-  // Lấy chữ cái đầu để hiển thị avatar fallback
-  const initials = user?.full_name
-    ? user.full_name.charAt(0).toUpperCase()
-    : user?.email?.charAt(0).toUpperCase() ?? "S";
+  // Ưu tiên hiển thị thông tin của Cửa hàng (Shop)
+  const shopName = user?.sellerProfile?.shop_name;
+  const logoUrl = user?.sellerProfile?.logo_url;
 
-  const displayName = user?.full_name || user?.email || "Nhà bán";
+  const displayName = shopName || user?.full_name || user?.email || "Nhà bán";
+  const initials = displayName.charAt(0).toUpperCase();
+
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob:")) return url;
+    const baseUrl = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? (import.meta.env.VITE_API_URL || "http://localhost:3000")
+      : (import.meta.env.VITE_API_URL || "");
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${cleanBaseUrl}${cleanUrl}`;
+  };
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white shadow fixed top-0 left-0 right-0 z-50">
@@ -62,11 +73,13 @@ export default function HeaderSeller() {
 
         {/* USER */}
         <div className="flex items-center gap-2">
-          {user?.avatar_url ? (
+          {logoUrl ? (
             <img
-              src={user.avatar_url}
-              alt="avatar"
-              className="w-8 h-8 rounded-full object-cover border border-gray-200"
+              key={logoUrl}
+              src={getImageUrl(logoUrl)}
+              alt="shop-logo"
+              className="w-8 h-8 rounded-full object-cover border border-gray-200 bg-white"
+              onError={(e) => { e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg"; }}
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-bold">

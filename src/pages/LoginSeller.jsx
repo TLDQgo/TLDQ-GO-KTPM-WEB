@@ -58,7 +58,7 @@ export default function LoginSeller() {
     <div className="min-h-screen flex p-4 justify-center bg-gradient-to-br from-blue-100 to-orange-100 px-4">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* LEFT */}
-        <div className="hidden md:flex flex-col justify-center items-center bg-blue-600 text-white p-8">
+        <div className="hidden md:flex flex-col justify-center items-center bg-orange-500 text-white p-8">
           <h2 className="text-3xl font-bold mb-4">Chào mừng trở lại 👋</h2>
           <p className="text-center text-sm opacity-90">
             Đăng nhập để quản lý cửa hàng và đơn hàng của bạn.
@@ -86,7 +86,7 @@ export default function LoginSeller() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               required
             />
 
@@ -97,7 +97,7 @@ export default function LoginSeller() {
               placeholder="Mật khẩu"
               value={form.password}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               required
             />
 
@@ -105,7 +105,7 @@ export default function LoginSeller() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>

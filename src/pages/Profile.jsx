@@ -11,9 +11,19 @@ export default function Profile() {
     phone: "",
     avatar_url: "",
     address_line: "",
-    shop_name: "",
   });
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const API_BASE_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? (import.meta.env.VITE_API_URL || "http://localhost:3000")
+    : "";
+
+  const getFullImageUrl = (path) => {
+    if (!path) return "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+    if (path.startsWith("http") || path.startsWith("blob:")) return path;
+    return `${API_BASE_URL}${path}`;
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -39,6 +49,41 @@ export default function Profile() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Ảnh quá lớn (tối đa 5MB)");
+      return;
+    }
+
+    // Create local preview
+    const localUrl = URL.createObjectURL(file);
+    setFormData((prev) => ({ ...prev, avatar_url: localUrl }));
+
+    const formDataUpload = new FormData();
+    formDataUpload.append("avatar", file);
+
+    setUploading(true);
+    try {
+      const res = await authApi.uploadAvatar(formDataUpload);
+      // After success, update with the real server path
+      const imageUrl = res?.avatar_url || res?.url;
+      if (imageUrl) {
+        setFormData((prev) => ({ ...prev, avatar_url: imageUrl }));
+      }
+      toast.success("Tải ảnh lên thành công!");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Lỗi khi tải ảnh lên");
+      // Fallback to default or previous if upload fails? 
+      // For now just keep what was there
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -108,31 +153,31 @@ export default function Profile() {
           {/* Avatar side */}
           <div className="flex flex-col items-center w-full gap-4 pr-4 border-r md:w-1/3">
             <img
-              src={
-                formData.avatar_url ||
-                "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg"
-              }
+              src={getFullImageUrl(formData.avatar_url)}
               alt="Avatar"
               className="object-cover w-32 h-32 border-4 border-white rounded-full shadow"
               onError={(e) => {
-                e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+                // Only reset if it's not a blob preview and it's actually failing
+                if (!formData.avatar_url.startsWith("blob:") && formData.avatar_url !== "") {
+                  console.log("Avatar load failed, using default");
+                  e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
+                }
               }}
             />
             <p className="text-sm font-medium text-gray-500">
-              Bản thu nhỏ đại diện
+              Ảnh đại diện
             </p>
             <div className="w-full">
-              <label className="block mb-1 text-xs text-gray-600">
-                Link ảnh đại diện (URL)
+              <label className="block w-full py-2 text-sm text-center text-white transition bg-blue-500 rounded-lg cursor-pointer hover:bg-blue-600">
+                {uploading ? "Đang tải..." : "Thay ảnh đại diện"}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                />
               </label>
-              <input
-                type="text"
-                name="avatar_url"
-                value={formData.avatar_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-              />
             </div>
           </div>
 
@@ -192,40 +237,6 @@ export default function Profile() {
                 />
               </div>
 
-              {isSeller && (
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Tên cửa hàng
-                  </label>
-                  <input
-                    type="text"
-                    name="shop_name"
-                    value={formData.shop_name}
-                    onChange={handleChange}
-                    placeholder="Tên cửa hàng của bạn"
-                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Quyền hạn (Role)
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={
-                    user.role === "seller"
-                      ? "Người Bán (Seller)"
-                      : user.role === "admin"
-                      ? "Quản Trị Viên (Admin)"
-                      : "Khách Hàng (Customer)"
-                  }
-                  className="w-full px-3 py-2 text-gray-500 bg-gray-100 border rounded-lg cursor-not-allowed"
-                />
-              </div>
-
               <div className="pt-6">
                 <button
                   type="submit"
@@ -236,25 +247,14 @@ export default function Profile() {
                 </button>
               </div>
 
-              {!isSeller ? (
-                <div className="pt-4">
-                  <Link to="/register-seller">
-                    <button
-                      type="button"
-                      className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-orange-500 hover:bg-orange-600 rounded-xl"
-                    >
-                      Đăng Ký Bán Hàng Ngay
-                    </button>
-                  </Link>
-                </div>
-              ) : (
+              {isSeller && (
                 <div className="pt-4">
                   <Link to="/seller">
                     <button
                       type="button"
                       className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-green-500 hover:bg-green-600 rounded-xl"
                     >
-                      Quay Lại Trang Quản Lý
+                      Quay lại trang cửa hàng
                     </button>
                   </Link>
                 </div>

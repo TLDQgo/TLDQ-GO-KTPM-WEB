@@ -56,6 +56,33 @@ const Register = () => {
           </h2>
 
           <div className="space-y-4">
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setRole("customer")}
+                  className={`px-4 py-2 text-sm rounded-md transition ${
+                    role === "customer"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Khách hàng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("seller")}
+                  className={`px-4 py-2 text-sm rounded-md transition ${
+                    role === "seller"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Người bán
+                </button>
+              </div>
+            </div>
+
             <Input
               placeholder="Họ và tên"
               value={fullName}
@@ -81,31 +108,6 @@ const Register = () => {
                 value={rePassword}
                 onChange={(e) => setRePassword(e.target.value)}
               />
-            </div>
-
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="customer"
-                  checked={role === "customer"}
-                  onChange={() => setRole("customer")}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Khách hàng</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  value="seller"
-                  checked={role === "seller"}
-                  onChange={() => setRole("seller")}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Nhà bán hàng</span>
-              </label>
             </div>
 
             <button

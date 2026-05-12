@@ -7,7 +7,6 @@ import productApi from "../api/productApi";
 import authApi from "../api/authApi";
 import cartApi from "../api/cartApi";
 import ProductPrice from "../components/common/ProductPrice";
-import Modal from "../components/common/Modal";
 import useAuthStore from "../store/useAuthStore";
 
 function StarRating({ value = 0, max = 5, onChange }) {
@@ -74,14 +73,6 @@ export default function ProductDetail() {
 
   const [mainImg, setMainImg] = useState(0);
   const [qty, setQty] = useState(1);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({
-    receiver_name: "",
-    phone_number: "",
-    shipping_address: "",
-    payment_method: "COD",
-  });
-
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
@@ -129,67 +120,24 @@ export default function ProductDetail() {
     },
   });
 
-  const handleOpenCheckout = () => {
+  const handleBuyNow = () => {
     if (!user) {
       toast.warning("Vui lòng đăng nhập để đặt hàng!");
       return;
     }
-    setCheckoutForm({
-      receiver_name: user.full_name || user.username || "",
-      phone_number: user.phone_number || "",
-      shipping_address: user.address || "",
-      payment_method: "COD",
+    navigate("/checkout", {
+      state: {
+        items: [{
+          product_id: product._id,
+          product_name: product.name,
+          quantity: qty,
+          price: product.original_price ?? product.price,
+          discount_price: product.discount_price ?? product.price,
+          image: Array.isArray(product.images) ? product.images[0] : product.image_url,
+        }],
+        from: "product",
+      },
     });
-    setCheckoutOpen(true);
-  };
-
-  const handleSubmitOrder = async (e) => {
-    e.preventDefault();
-    if (
-      !checkoutForm.receiver_name ||
-      !checkoutForm.phone_number ||
-      !checkoutForm.shipping_address
-    ) {
-      toast.error("Vui lòng điền đầy đủ thông tin giao hàng!");
-      return;
-    }
-    if (!/^[0-9]{10,11}$/.test(checkoutForm.phone_number)) {
-      toast.error("Số điện thoại không hợp lệ!");
-      return;
-    }
-
-    try {
-      const isLocal =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-      const BASE_URL = isLocal
-        ? import.meta.env.VITE_API_URL || "http://localhost:3000"
-        : "";
-
-      const res = await fetch(`${BASE_URL}/api/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: user._id || user.id,
-          shipping_address: checkoutForm.shipping_address,
-          receiver_name: checkoutForm.receiver_name,
-          phone_number: checkoutForm.phone_number,
-          payment_method: checkoutForm.payment_method,
-          items: [{ product_id: product._id, quantity: qty }],
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Đặt hàng thành công!");
-        setCheckoutOpen(false);
-        queryClient.invalidateQueries({ queryKey: ["product", id] });
-      } else {
-        toast.error(`Lỗi: ${data.message || "Không thể đặt hàng"}`);
-      }
-    } catch (err) {
-      toast.error("Đã xảy ra lỗi hệ thống");
-    }
   };
 
   const handleAddToCart = async () => {
@@ -399,7 +347,7 @@ export default function ProductDetail() {
                   {addingToCart ? "Đang thêm..." : "Thêm vào giỏ"}
                 </button>
                 <button
-                  onClick={handleOpenCheckout}
+                  onClick={handleBuyNow}
                   disabled={product.stock_quantity === 0}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white font-bold rounded-xl transition text-base"
                 >
@@ -551,109 +499,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      <Modal
-        isOpen={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        title="Thông tin đặt hàng"
-      >
-        {product && (
-          <form onSubmit={handleSubmitOrder} className="space-y-4">
-            <div className="flex gap-3 p-3 border rounded-lg bg-gray-50">
-              <img
-                src={images[0]}
-                alt={product.name}
-                className="w-16 h-16 object-cover rounded"
-              />
-              <div>
-                <p className="text-sm font-medium line-clamp-2">
-                  {product.name}
-                </p>
-                <ProductPrice product={product} />
-                <p className="text-xs text-gray-500">x{qty}</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Người nhận (*)
-              </label>
-              <input
-                required
-                type="text"
-                value={checkoutForm.receiver_name}
-                onChange={(e) =>
-                  setCheckoutForm({ ...checkoutForm, receiver_name: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Số điện thoại (*)
-              </label>
-              <input
-                required
-                type="tel"
-                value={checkoutForm.phone_number}
-                onChange={(e) =>
-                  setCheckoutForm({ ...checkoutForm, phone_number: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Địa chỉ giao hàng (*)
-              </label>
-              <textarea
-                required
-                value={checkoutForm.shipping_address}
-                onChange={(e) =>
-                  setCheckoutForm({ ...checkoutForm, shipping_address: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Phương thức thanh toán
-              </label>
-              <select
-                value={checkoutForm.payment_method}
-                onChange={(e) =>
-                  setCheckoutForm({ ...checkoutForm, payment_method: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-                <option value="BankTransfer">Chuyển khoản / Thẻ</option>
-              </select>
-            </div>
-
-            <div className="pt-3 border-t flex items-center justify-between">
-              <span className="font-semibold text-gray-700">Tổng:</span>
-              <span className="text-xl font-bold text-red-600">
-                {(
-                  qty * (product.discount_price ?? product.price ?? 0)
-                ).toLocaleString("vi-VN")}
-                đ
-              </span>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition"
-            >
-              Xác nhận đặt hàng
-            </button>
-          </form>
-        )}
-      </Modal>
     </div>
   );
 }

@@ -49,101 +49,33 @@ export default function Home() {
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
     useState(null);
-  const [selectedProductForCheckout, setSelectedProductForCheckout] =
-    useState(null);
-
   const [categoryProducts, setCategoryProducts] = useState([]);
   const [categoryPage, setCategoryPage] = useState(1);
   const [categoryTotalPages, setCategoryTotalPages] = useState(1);
   const [gheProducts, setGheProducts] = useState([]);
   const [ghePage, setGhePage] = useState(1);
   const [gheTotalPages, setGheTotalPages] = useState(1);
-  // Form states
-  const [checkoutForm, setCheckoutForm] = useState({
-    receiver_name: "",
-    phone_number: "",
-    shipping_address: "",
-    quantity: 1,
-    payment_method: "COD",
-  });
 
   const handleOrder = (product, e) => {
-    e.stopPropagation(); // Prevent opening product details
+    e.stopPropagation();
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
       toast.warning("Vui lòng đăng nhập để đặt hàng!");
       return;
     }
-
-    const user = JSON.parse(storedUser);
-    setSelectedProductForCheckout(product);
-    setCheckoutForm({
-      receiver_name: user.full_name || user.username || "",
-      phone_number: user.phone_number || "",
-      shipping_address: user.address || "97 Võ Văn Ngân, Thủ Đức, TP.HCM",
-      quantity: 1,
-      payment_method: "COD",
+    navigate("/checkout", {
+      state: {
+        items: [{
+          product_id: product._id,
+          product_name: product.name,
+          quantity: 1,
+          price: product.original_price ?? product.price,
+          discount_price: product.discount_price ?? product.price,
+          image: Array.isArray(product.images) ? product.images[0] : product.image_url,
+        }],
+        from: "product",
+      },
     });
-  };
-
-  const submitOrder = async (e) => {
-    e.preventDefault();
-    if (
-      !checkoutForm.receiver_name ||
-      !checkoutForm.phone_number ||
-      !checkoutForm.shipping_address
-    ) {
-      toast.error("Vui lòng điền đầy đủ thông tin giao hàng!");
-      return;
-    }
-
-    // Validate phone number roughly
-    if (!/^[0-9]{10,11}$/.test(checkoutForm.phone_number)) {
-      toast.error("Số điện thoại không hợp lệ! Vui lòng nhập 10-11 chữ số.");
-      return;
-    }
-
-    const storedUser = localStorage.getItem("user");
-    const user = JSON.parse(storedUser);
-
-    try {
-      const isLocal =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-      const BASE_URL = isLocal
-        ? import.meta.env.VITE_API_URL || "http://localhost:3000"
-        : "";
-      const res = await fetch(`${BASE_URL}/api/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer_id: user._id || user.id,
-          shipping_address: checkoutForm.shipping_address,
-          receiver_name: checkoutForm.receiver_name,
-          phone_number: checkoutForm.phone_number,
-          payment_method: checkoutForm.payment_method,
-          items: [
-            {
-              product_id: selectedProductForCheckout._id,
-              quantity: checkoutForm.quantity,
-            },
-          ],
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        toast.success("Đặt hàng thành công!");
-        setSelectedProductForCheckout(null); // Close modal
-      } else {
-        toast.error(`Lỗi: ${data.message || "Không thể đặt hàng"}`);
-      }
-    } catch (err) {
-      console.error("Order error:", err);
-      toast.error("Đã xảy ra lỗi hệ thống khi đặt hàng");
-    }
   };
 
   useEffect(() => {
@@ -307,9 +239,8 @@ export default function Home() {
           <div className="flex gap-2">
             <button
               onClick={() => setIsBestSeller(!isBestSeller)}
-              className={`px-3 py-1 text-sm border rounded-lg ${
-                isBestSeller ? "bg-blue-500 text-white" : ""
-              }`}
+              className={`px-3 py-1 text-sm border rounded-lg ${isBestSeller ? "bg-blue-500 text-white" : ""
+                }`}
             >
               Sản Phẩm Bán Chạy Nhất
             </button>
@@ -377,9 +308,8 @@ export default function Home() {
               <button
                 key={i}
                 onClick={() => setPage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  page === i + 1 ? "bg-blue-500 text-white" : ""
-                }`}
+                className={`px-3 py-1 border rounded ${page === i + 1 ? "bg-blue-500 text-white" : ""
+                  }`}
               >
                 {i + 1}
               </button>
@@ -478,9 +408,8 @@ export default function Home() {
               <button
                 key={i}
                 onClick={() => setCategoryPage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  categoryPage === i + 1 ? "bg-blue-500 text-white" : ""
-                }`}
+                className={`px-3 py-1 border rounded ${categoryPage === i + 1 ? "bg-blue-500 text-white" : ""
+                  }`}
               >
                 {i + 1}
               </button>
@@ -580,9 +509,8 @@ export default function Home() {
               <button
                 key={i}
                 onClick={() => setGhePage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  ghePage === i + 1 ? "bg-blue-500 text-white" : ""
-                }`}
+                className={`px-3 py-1 border rounded ${ghePage === i + 1 ? "bg-blue-500 text-white" : ""
+                  }`}
               >
                 {i + 1}
               </button>
@@ -679,163 +607,6 @@ export default function Home() {
         )}
       </Modal>
 
-      {/* Checkout Modal */}
-      <Modal
-        isOpen={!!selectedProductForCheckout}
-        onClose={() => setSelectedProductForCheckout(null)}
-        title="Thông tin thanh toán"
-      >
-        {selectedProductForCheckout && (
-          <form onSubmit={submitOrder} className="space-y-4">
-            <div className="flex gap-4 p-3 border rounded-lg bg-gray-50">
-              <img
-                src={
-                  selectedProductForCheckout.images?.[0] ||
-                  selectedProductForCheckout.img ||
-                  "https://via.placeholder.com/80"
-                }
-                alt="Product"
-                className="object-cover w-16 h-16 rounded"
-              />
-              <div>
-                <p className="text-sm font-medium">
-                  {selectedProductForCheckout.name}
-                </p>
-                <p className="font-bold text-red-500">
-                  {(
-                    selectedProductForCheckout.discount_price ??
-                    selectedProductForCheckout.price
-                  )?.toLocaleString("vi-VN")}
-                  đ
-                </p>
-                {selectedProductForCheckout.discount_price && (
-                  <p className="text-xs text-gray-400 line-through">
-                    {selectedProductForCheckout.price?.toLocaleString("vi-VN")}đ
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Người nhận (*)
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={checkoutForm.receiver_name}
-                  onChange={(e) =>
-                    setCheckoutForm({
-                      ...checkoutForm,
-                      receiver_name: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Số điện thoại (*)
-                </label>
-                <input
-                  required
-                  type="tel"
-                  value={checkoutForm.phone_number}
-                  onChange={(e) =>
-                    setCheckoutForm({
-                      ...checkoutForm,
-                      phone_number: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Địa chỉ giao hàng (*)
-                </label>
-                <textarea
-                  required
-                  value={checkoutForm.shipping_address}
-                  onChange={(e) =>
-                    setCheckoutForm({
-                      ...checkoutForm,
-                      shipping_address: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="2"
-                ></textarea>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="w-1/3">
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Số lượng
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={checkoutForm.quantity}
-                    onChange={(e) =>
-                      setCheckoutForm({
-                        ...checkoutForm,
-                        quantity: parseInt(e.target.value) || 1,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Phương thức thanh toán
-                  </label>
-                  <select
-                    value={checkoutForm.payment_method}
-                    onChange={(e) =>
-                      setCheckoutForm({
-                        ...checkoutForm,
-                        payment_method: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-                    <option value="BankTransfer">Chuyển khoản / Thẻ</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Total */}
-            <div className="pt-4 mt-6 border-t">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-semibold text-gray-700">
-                  Tổng thanh toán:
-                </span>
-                <span className="text-xl font-bold text-red-600">
-                  {(
-                    (checkoutForm.quantity || 1) *
-                    (selectedProductForCheckout.discount_price ??
-                      selectedProductForCheckout.price)
-                  ).toLocaleString("vi-VN")}
-                  đ
-                </span>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-700"
-              >
-                Xác nhận đặt hàng
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
     </div>
   );
 }

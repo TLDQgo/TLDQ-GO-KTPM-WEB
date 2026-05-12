@@ -1,139 +1,14 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
 import cartApi from "../api/cartApi";
-import orderApi from "../api/orderApi";
 
 function formatPrice(price) {
   return Number(price || 0).toLocaleString("vi-VN") + "đ";
 }
 
-function CheckoutModal({ isOpen, onClose, onConfirm, total, loading, defaultValues }) {
-  const [form, setForm] = useState({
-    receiver_name: defaultValues?.full_name || "",
-    phone_number: defaultValues?.phone || "",
-    shipping_address: defaultValues?.address || "",
-    payment_method: "COD",
-  });
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.receiver_name.trim() || !form.phone_number.trim() || !form.shipping_address.trim()) {
-      toast.error("Vui lòng điền đầy đủ thông tin giao hàng!");
-      return;
-    }
-    if (!/^[0-9]{9,11}$/.test(form.phone_number.trim())) {
-      toast.error("Số điện thoại không hợp lệ (9–11 số)!");
-      return;
-    }
-    onConfirm(form);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800">Thông tin giao hàng</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Người nhận <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={form.receiver_name}
-              onChange={(e) => setForm({ ...form, receiver_name: e.target.value })}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nguyễn Văn A"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Số điện thoại <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              required
-              value={form.phone_number}
-              onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0912345678"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Địa chỉ giao hàng <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={form.shipping_address}
-              onChange={(e) => setForm({ ...form, shipping_address: e.target.value })}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phương thức thanh toán
-            </label>
-            <select
-              value={form.payment_method}
-              onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-              className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-              <option value="BankTransfer">Chuyển khoản / Thẻ</option>
-            </select>
-          </div>
-
-          <div className="flex justify-between items-center pt-2 border-t">
-            <span className="text-sm text-gray-600">Tổng thanh toán:</span>
-            <span className="text-xl font-bold text-red-500">{formatPrice(total)}</span>
-          </div>
-
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium transition"
-            >
-              Huỷ
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition"
-            >
-              {loading ? "Đang đặt..." : "Xác nhận đặt hàng"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 export default function Cart() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const user = (() => {
     try { return JSON.parse(localStorage.getItem("user")); }
@@ -166,30 +41,16 @@ export default function Cart() {
     0,
   );
 
-  const handleConfirmOrder = async (shippingInfo) => {
-    setCheckoutLoading(true);
-    try {
-      const orderItems = items.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-      }));
-      await orderApi.createOrder({
-        customer_id: userId,
-        items: orderItems,
-        shipping_address: shippingInfo.shipping_address,
-        receiver_name: shippingInfo.receiver_name,
-        phone_number: shippingInfo.phone_number,
-        payment_method: shippingInfo.payment_method,
-      });
-      await cartApi.clearCart(userId);
-      queryClient.invalidateQueries(["cart", userId]);
-      setCheckoutOpen(false);
-      toast.success("Đặt hàng thành công!");
-    } catch (err) {
-      toast.error(err?.response?.data?.message ?? err?.message ?? "Đặt hàng thất bại");
-    } finally {
-      setCheckoutLoading(false);
-    }
+  const handleCheckout = () => {
+    const checkoutItems = items.map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      price: item.price,
+      discount_price: item.discount_price,
+      image: item.image,
+    }));
+    navigate("/checkout", { state: { items: checkoutItems, from: "cart" } });
   };
 
   if (!userId) {
@@ -330,7 +191,7 @@ export default function Cart() {
             </div>
 
             <button
-              onClick={() => setCheckoutOpen(true)}
+              onClick={handleCheckout}
               disabled={items.length === 0}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
             >
@@ -346,15 +207,6 @@ export default function Cart() {
           </div>
         </div>
       )}
-
-      <CheckoutModal
-        isOpen={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        onConfirm={handleConfirmOrder}
-        total={total}
-        loading={checkoutLoading}
-        defaultValues={user}
-      />
     </div>
   );
 }

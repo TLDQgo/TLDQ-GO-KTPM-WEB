@@ -6,6 +6,7 @@ import useAuthStore from "../../store/useAuthStore";
 import { format } from "date-fns";
 
 const STATUS_COLORS = {
+  awaiting_payment: "bg-orange-100 text-orange-800",
   pending: "bg-yellow-100 text-yellow-800",
   confirmed: "bg-blue-100 text-blue-800",
   preparing: "bg-indigo-100 text-indigo-800",
@@ -15,6 +16,7 @@ const STATUS_COLORS = {
 };
 
 const STATUS_LABELS = {
+  awaiting_payment: "Chờ thanh toán",
   pending: "Chờ xác nhận",
   confirmed: "Đã xác nhận",
   preparing: "Đang đóng gói",

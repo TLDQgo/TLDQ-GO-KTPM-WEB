@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart } from "lucide-react";
-import useAuthStore from "../../store/useAuthStore";
+import { ShoppingCart, ClipboardList } from "lucide-react";
 import cartApi from "../../api/cartApi";
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const setUserStore = useAuthStore((s) => s.setUser);
-
   const { data: cartData } = useQuery({
     queryKey: ["cart", user?._id],
     queryFn: () => cartApi.getCart(user._id),
@@ -95,6 +92,17 @@ const Header = () => {
               </span>
             )}
           </Link>
+
+          {/* ORDER HISTORY ICON — chỉ hiện khi đã đăng nhập */}
+          {user && (
+            <Link
+              to="/don-hang"
+              title="Đơn hàng của tôi"
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition"
+            >
+              <ClipboardList className="w-5 h-5" />
+            </Link>
+          )}
 
           <button
             onClick={handleSellerClick}

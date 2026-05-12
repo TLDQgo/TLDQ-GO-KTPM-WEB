@@ -32,6 +32,14 @@ const orderApi = {
   },
 
   createOrder: (data) => orderApiClient.post("/orders", data),
+
+  getOrdersByCustomer: (customerId) =>
+    orderApiClient.get(`/orders/customer/${customerId}`),
+
+  createVNPayPayment: (data) => orderApiClient.post("/orders/vnpay/create-payment", data),
+
+  verifyVNPayPayment: (queryString) =>
+    orderApiClient.get(`/orders/vnpay/verify?${queryString}`),
 };
 
 export default orderApi;

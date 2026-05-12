@@ -2,6 +2,9 @@ import { Route } from "react-router-dom";
 import Home from "../pages/Home";
 import ProductDetail from "../pages/ProductDetail";
 import Cart from "../pages/Cart";
+import PaymentResult from "../pages/PaymentResult";
+import Checkout from "../pages/Checkout";
+import OrderHistory from "../pages/OrderHistory";
 import { UserLayout } from "./DashBoardLayout";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
@@ -104,6 +107,9 @@ export default function RoutesUser() {
           </UserLayout>
         }
       />
+      <Route path="/checkout" element={<UserLayout><Checkout /></UserLayout>} />
+      <Route path="/don-hang" element={<UserLayout><OrderHistory /></UserLayout>} />
+      <Route path="/thanh-toan/ket-qua" element={<PaymentResult />} />
     </>
   );
 }

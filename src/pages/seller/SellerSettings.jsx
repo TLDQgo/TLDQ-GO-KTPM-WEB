@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Store, Lock, Bell, User, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
@@ -13,6 +13,8 @@ export default function SellerSettings() {
 
   const isFromRegister = searchParams.get("from") === "register";
   const [activeTab, setActiveTab] = useState(isFromRegister ? "shop" : "shop");
+  const logoInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -29,6 +31,14 @@ export default function SellerSettings() {
     operating_hours: "",
     shipping_policy: "",
     return_policy: "",
+  });
+  const [shopAssets, setShopAssets] = useState({
+    logoPreview: "",
+    bannerPreview: "",
+  });
+  const [shopFiles, setShopFiles] = useState({
+    logo: null,
+    banner: null,
   });
 
   // Password state
@@ -56,21 +66,29 @@ export default function SellerSettings() {
 
       try {
         const res = await authApi.getShopSetupStatus();
-        if (res?.profile) {
-          const p = res.profile;
-          setShopForm({
-            shop_name: p.shop_name || "",
-            description: p.description || "",
+          if (res?.profile) {
+            const p = res.profile;
+            setShopForm({
+              shop_name: p.shop_name || "",
+              description: p.description || "",
             address_line: p.address_line || "",
             shop_email: p.shop_email || "",
             shop_phone: p.shop_phone || "",
             logo_url: p.logo_url || "",
             banner_url: p.banner_url || "",
             operating_hours: p.operating_hours || "",
-            shipping_policy: p.shipping_policy || "",
-            return_policy: p.return_policy || "",
-          });
-        }
+              shipping_policy: p.shipping_policy || "",
+              return_policy: p.return_policy || "",
+            });
+            setShopAssets({
+              logoPreview: p.logo_url || "",
+              bannerPreview: p.banner_url || "",
+            });
+            setShopFiles({
+              logo: null,
+              banner: null,
+            });
+          }
       } catch (error) {
         console.error("Lỗi load dữ liệu shop:", error);
       } finally {
@@ -84,6 +102,24 @@ export default function SellerSettings() {
   const handleShopChange = (e) => {
     const { name, value } = e.target;
     setShopForm({ ...shopForm, [name]: value });
+  };
+
+  const handleSelectShopAsset = (field) => (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh hợp lệ");
+      return;
+    }
+
+    const previewKey = field === "logo" ? "logoPreview" : "bannerPreview";
+
+    setShopFiles((prev) => ({ ...prev, [field]: file }));
+    setShopAssets((prev) => ({
+      ...prev,
+      [previewKey]: URL.createObjectURL(file),
+    }));
   };
 
   const handleShopSubmit = async (e) => {
@@ -102,7 +138,20 @@ export default function SellerSettings() {
     setLoading(true);
 
     try {
-      const res = await authApi.updateShopSettings(shopForm);
+      const payload = new FormData();
+      Object.entries(shopForm).forEach(([key, value]) => {
+        payload.append(key, value ?? "");
+      });
+
+      if (shopFiles.logo) {
+        payload.append("logo", shopFiles.logo);
+      }
+
+      if (shopFiles.banner) {
+        payload.append("banner", shopFiles.banner);
+      }
+
+      const res = await authApi.updateShopSettings(payload);
 
       // Update local user with new shop data
       if (res?.profile) {
@@ -112,6 +161,14 @@ export default function SellerSettings() {
         };
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
+        setShopAssets({
+          logoPreview: res.profile.logo_url || "",
+          bannerPreview: res.profile.banner_url || "",
+        });
+        setShopFiles({
+          logo: null,
+          banner: null,
+        });
       }
 
       toast.success("Cập nhật thông tin cửa hàng thành công!");
@@ -345,30 +402,77 @@ export default function SellerSettings() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Logo cửa hàng (URL)
-                      </label>
+                      <div className="mb-2 flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Logo cửa hàng
+                        </label>
+                        <span className="text-xs text-gray-500">Nhấn để tải ảnh</span>
+                      </div>
                       <input
-                        type="url"
-                        name="logo_url"
-                        value={shopForm.logo_url}
-                        onChange={handleShopChange}
-                        placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleSelectShopAsset("logo")}
                       />
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="flex aspect-square w-full max-w-[180px] items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 transition hover:border-blue-400 hover:bg-blue-100"
+                      >
+                        {shopAssets.logoPreview ? (
+                          <img
+                            src={shopAssets.logoPreview}
+                            alt="Logo cửa hàng"
+                            className="h-full w-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.src = "";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-blue-700">
+                            <div className="text-3xl font-black">+</div>
+                            <div className="text-sm font-semibold">Tải logo</div>
+                          </div>
+                        )}
+                      </button>
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Banner cửa hàng (URL)
-                      </label>
+                      <div className="mb-2 flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Banner cửa hàng
+                        </label>
+                        <span className="text-xs text-gray-500">Nhấn để tải ảnh</span>
+                      </div>
                       <input
-                        type="url"
-                        name="banner_url"
-                        value={shopForm.banner_url}
-                        onChange={handleShopChange}
-                        placeholder="https://example.com/banner.png"
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ref={bannerInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleSelectShopAsset("banner")}
                       />
+                      <button
+                        type="button"
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="flex aspect-[16/6] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50 transition hover:border-orange-400 hover:bg-orange-100 min-h-32"
+                      >
+                        {shopAssets.bannerPreview ? (
+                          <img
+                            src={shopAssets.bannerPreview}
+                            alt="Banner cửa hàng"
+                            className="h-full w-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.src = "";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-orange-700">
+                            <div className="text-3xl font-black">+</div>
+                            <div className="text-sm font-semibold">Tải banner</div>
+                          </div>
+                        )}
+                      </button>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">

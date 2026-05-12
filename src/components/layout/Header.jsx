@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart } from "lucide-react";
-import useAuthStore from "../../store/useAuthStore";
 import cartApi from "../../api/cartApi";
 
 const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const setUserStore = useAuthStore((s) => s.setUser);
 
   const { data: cartData } = useQuery({
     queryKey: ["cart", user?._id],
@@ -47,11 +45,11 @@ const Header = () => {
     navigate("/");
   };
   const handleSellerClick = () => {
-    // if (user?.role === "seller") {
-    //   navigate("/seller");
-    // } else {
-    //   navigate("/register-seller");
-    // }
+    if (user?.role === "seller") {
+      navigate("/seller");
+      return;
+    }
+
     navigate("/register-seller");
   };
   return (

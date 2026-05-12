@@ -1,267 +1,299 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import authApi from "../api/authApi";
+import useAuthStore from "../store/useAuthStore";
+
+const DEFAULT_PERSONAL_AVATAR =
+  "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [formData, setFormData] = useState({
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+
+  const avatarInputRef = useRef(null);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profileUser, setProfileUser] = useState(null);
+  const [customerProfile, setCustomerProfile] = useState(null);
+  const [sellerProfile, setSellerProfile] = useState(null);
+
+  const [personalForm, setPersonalForm] = useState({
     full_name: "",
     phone: "",
-    avatar_url: "",
     address_line: "",
+  });
+  const [shopForm, setShopForm] = useState({
     shop_name: "",
   });
-  const [loading, setLoading] = useState(false);
+
+  const [personalAvatarFile, setPersonalAvatarFile] = useState(null);
+  const [personalAvatarPreview, setPersonalAvatarPreview] = useState("");
+
+  const isSeller = useMemo(() => profileUser?.role === "seller", [profileUser]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setUser(parsed);
-        setFormData({
-          full_name: parsed.full_name || "",
-          phone: parsed.phone || "",
-          avatar_url: parsed.avatar_url || "",
-          address_line: parsed.customerProfile?.address_line || parsed.sellerProfile?.address_line || "",
-          shop_name: parsed.sellerProfile?.shop_name || "",
-        });
-        setProfile(parsed.customerProfile || parsed.sellerProfile || null);
-      } catch (e) {
-        console.error("Failed to parse user", e);
-      }
-    } else {
-      toast.error("Vui lòng đăng nhập để xem hồ sơ");
-    }
-  }, []);
+    let alive = true;
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const loadProfile = async () => {
+      if (!user) {
+        toast.error("Vui lòng đăng nhập để xem hồ sơ.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await authApi.getProfile();
+        if (!alive) return;
+
+        const nextUser = res.user || user;
+        const nextCustomerProfile = res.customerProfile || null;
+        const nextSellerProfile = res.sellerProfile || null;
+
+        setProfileUser(nextUser);
+        setCustomerProfile(nextCustomerProfile);
+        setSellerProfile(nextSellerProfile);
+        setUser(nextUser);
+
+        setPersonalForm({
+          full_name: nextUser.full_name || "",
+          phone: nextUser.phone || "",
+          address_line:
+            nextCustomerProfile?.address_line ||
+            nextSellerProfile?.address_line ||
+            "",
+        });
+
+        setShopForm({
+          shop_name: nextSellerProfile?.shop_name || nextUser.full_name || "",
+        });
+
+        setPersonalAvatarPreview(nextUser.avatar_url || DEFAULT_PERSONAL_AVATAR);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Không tải được hồ sơ.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      alive = false;
+    };
+  }, [setUser, user?._id]);
+
+  const handlePersonalChange = (e) => {
+    const { name, value } = e.target;
+    setPersonalForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleShopChange = (e) => {
+    const { name, value } = e.target;
+    setShopForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectPersonalAvatar = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh hợp lệ.");
+      return;
+    }
+
+    setPersonalAvatarFile(file);
+    setPersonalAvatarPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) {
-      toast.error("Không tìm thấy thông tin định danh người dùng!");
+
+    if (!profileUser) {
+      toast.error("Không tìm thấy thông tin người dùng.");
       return;
     }
 
-    setLoading(true);
-
     try {
-      let res;
-      if (user.role === "seller") {
-        res = await authApi.updateSellerProfile({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          avatar_url: formData.avatar_url,
-          address_line: formData.address_line,
-          shop_name: formData.shop_name,
-        });
-      } else {
-        res = await authApi.updateProfile({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          avatar_url: formData.avatar_url,
-          address_line: formData.address_line,
-        });
+      setSaving(true);
+
+      const payload = new FormData();
+      payload.append("full_name", personalForm.full_name);
+      payload.append("phone", personalForm.phone);
+      payload.append("address_line", personalForm.address_line);
+
+      if (personalAvatarFile) {
+        payload.append("avatar", personalAvatarFile);
       }
 
-      toast.success("Cập nhật thông tin thành công!");
+      let res;
+      if (isSeller) {
+        payload.append("shop_name", shopForm.shop_name);
+        res = await authApi.updateSellerProfile(payload);
+      } else {
+        res = await authApi.updateProfile(payload);
+      }
 
-      const updatedUser = { ...user, ...res.user };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      const nextUser = res.user || profileUser;
+      setProfileUser(nextUser);
+      setUser(nextUser);
+      setCustomerProfile(res.customerProfile || customerProfile);
+      setSellerProfile(res.sellerProfile || sellerProfile);
 
+      setPersonalAvatarFile(null);
+      setPersonalAvatarPreview(nextUser.avatar_url || DEFAULT_PERSONAL_AVATAR);
+
+      toast.success(res.message || "Cập nhật hồ sơ thành công.");
       window.dispatchEvent(new Event("auth-change"));
     } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Lỗi hệ thống khi cập nhật hồ sơ");
+      toast.error(error.response?.data?.message || "Cập nhật hồ sơ thất bại.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  if (!user)
-    return <div className="p-8 text-center">Vui lòng đăng nhập...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="rounded-2xl bg-white px-6 py-4 shadow">Đang tải hồ sơ...</div>
+      </div>
+    );
+  }
 
-  const isSeller = user.role === "seller";
-
-  return (
-    <div className="min-h-screen px-4 py-10 bg-gray-50">
-      <div className="max-w-3xl p-8 mx-auto bg-white shadow rounded-2xl">
-        <div className="flex items-center justify-between pb-4 mb-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {isSeller ? "Hồ Sơ Người Bán" : "Hồ Sơ Người Dùng"}
-          </h2>
+  if (!profileUser) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-xl">
+          <p className="text-lg font-semibold text-slate-900">Bạn chưa đăng nhập</p>
+          <p className="mt-2 text-sm text-slate-500">
+            Vui lòng đăng nhập để xem và chỉnh sửa hồ sơ.
+          </p>
           <Link
-            to="/change-password"
-            className="text-sm text-blue-600 hover:underline"
+            to="/login"
+            className="mt-6 inline-flex rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
           >
-            Đổi mật khẩu
+            Đăng nhập
           </Link>
         </div>
+      </div>
+    );
+  }
 
-        <div className="flex flex-col gap-8 md:flex-row">
-          {/* Avatar side */}
-          <div className="flex flex-col items-center w-full gap-4 pr-4 border-r md:w-1/3">
-            <img
-              src={
-                formData.avatar_url ||
-                "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg"
-              }
-              alt="Avatar"
-              className="object-cover w-32 h-32 border-4 border-white rounded-full shadow"
-              onError={(e) => {
-                e.target.src = "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg";
-              }}
-            />
-            <p className="text-sm font-medium text-gray-500">
-              Bản thu nhỏ đại diện
-            </p>
-            <div className="w-full">
-              <label className="block mb-1 text-xs text-gray-600">
-                Link ảnh đại diện (URL)
-              </label>
-              <input
-                type="text"
-                name="avatar_url"
-                value={formData.avatar_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-              />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50 px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <section className="rounded-[2rem] bg-white p-6 shadow-lg ring-1 ring-black/5">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center justify-center">Thông tin cá nhân</h2>
             </div>
-          </div>
 
-          {/* Form side */}
-          <div className="flex-1">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Email{" "}
-                  <span className="text-xs text-red-500">(Không thể đổi)</span>
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={user.email}
-                  className="w-full px-3 py-2 text-gray-500 bg-gray-100 border rounded-lg cursor-not-allowed"
+            <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+              <div className="flex flex-col items-center gap-4 rounded-3xl bg-slate-50 p-5">
+                <img
+                  src={personalAvatarPreview || DEFAULT_PERSONAL_AVATAR}
+                  alt="Avatar cá nhân"
+                  className="h-40 w-40 rounded-full object-cover shadow-md ring-4 ring-white"
+                  onError={(event) => {
+                    event.currentTarget.src = DEFAULT_PERSONAL_AVATAR;
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Tên hiển thị
-                </label>
                 <input
-                  type="text"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleSelectPersonalAvatar}
                 />
-              </div>
 
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Số điện thoại
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Địa chỉ
-                </label>
-                <input
-                  type="text"
-                  name="address_line"
-                  value={formData.address_line}
-                  onChange={handleChange}
-                  placeholder="97 Võ Văn Ngân, Thủ Đức, TP.HCM"
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {isSeller && (
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Tên cửa hàng
-                  </label>
-                  <input
-                    type="text"
-                    name="shop_name"
-                    value={formData.shop_name}
-                    onChange={handleChange}
-                    placeholder="Tên cửa hàng của bạn"
-                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Quyền hạn (Role)
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value={
-                    user.role === "seller"
-                      ? "Người Bán (Seller)"
-                      : user.role === "admin"
-                      ? "Quản Trị Viên (Admin)"
-                      : "Khách Hàng (Customer)"
-                  }
-                  className="w-full px-3 py-2 text-gray-500 bg-gray-100 border rounded-lg cursor-not-allowed"
-                />
-              </div>
-
-              <div className="pt-6">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50"
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="w-full rounded-xl border border-blue-200 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
                 >
-                  {loading ? "Đang xử lý..." : "Lưu Thông Tin"}
+                  Thay ảnh đại diện
                 </button>
               </div>
 
-              {!isSeller ? (
-                <div className="pt-4">
-                  <Link to="/register-seller">
-                    <button
-                      type="button"
-                      className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-orange-500 hover:bg-orange-600 rounded-xl"
-                    >
-                      Đăng Ký Bán Hàng Ngay
-                    </button>
-                  </Link>
+              <div className="grid gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
+                  <input
+                    type="text"
+                    value={profileUser.email || ""}
+                    disabled
+                    className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
+                  />
                 </div>
-              ) : (
-                <div className="pt-4">
-                  <Link to="/seller">
-                    <button
-                      type="button"
-                      className="w-full px-4 py-3 font-bold text-white transition duration-200 bg-green-500 hover:bg-green-600 rounded-xl"
-                    >
-                      Quay Lại Trang Quản Lý
-                    </button>
-                  </Link>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Tên hiển thị
+                  </label>
+                  <input
+                    name="full_name"
+                    value={personalForm.full_name}
+                    onChange={handlePersonalChange}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  />
                 </div>
-              )}
-            </form>
-          </div>
-        </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Số điện thoại
+                  </label>
+                  <input
+                    name="phone"
+                    value={personalForm.phone}
+                    onChange={handlePersonalChange}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Địa chỉ
+                  </label>
+                  <input
+                    name="address_line"
+                    value={personalForm.address_line}
+                    onChange={handlePersonalChange}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 border-t border-slate-100 pt-6">
+              <div className="flex flex-col gap-3 sm:w-full sm:max-w-[220px]">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Đang lưu..." : "Lưu thông tin"}
+                </button>
+
+                <Link
+                  to="/change-password"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-5 py-3 font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+                >
+                  Đổi mật khẩu
+                </Link>
+
+                {isSeller ? (
+                  <Link
+                    to="/seller"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                  >
+                    Quay lại cửa hàng
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </section>
+        </form>
       </div>
     </div>
   );

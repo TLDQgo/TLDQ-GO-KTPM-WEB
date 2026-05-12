@@ -1,151 +1,160 @@
-import Input from "../components/common/Input";
 import { useState } from "react";
-import authApi from "../api/authApi";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useNavigate, Link } from "react-router-dom";
+import Input from "../components/common/Input";
+import authApi from "../api/authApi";
 import useAuthStore from "../store/useAuthStore";
 
-const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginAsSeller, setLoginAsSeller] = useState(false);
+export default function Login() {
   const navigate = useNavigate();
   const setUser = useAuthStore((s) => s.setUser);
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginAsSeller, setLoginAsSeller] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       toast.error("Vui lòng nhập email và mật khẩu.");
       return;
     }
+
     try {
-      let res;
-      if (loginAsSeller) {
-        res = await authApi.loginSeller({ email, password });
-      } else {
-        res = await authApi.loginUser({ email, password });
-      }
-      toast.success(res.message || "Đăng nhập thành công!");
-      localStorage.setItem("token", res.token);
+      setLoading(true);
+
+      const res = loginAsSeller
+        ? await authApi.loginSeller({ email, password })
+        : await authApi.login({ email, password });
+
       setUser(res.user);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      localStorage.setItem("token", res.token);
       window.dispatchEvent(new Event("auth-change"));
 
-      if (loginAsSeller && res.user.role === "seller") {
+      toast.success(res.message || "Đăng nhập thành công!");
+
+      if (loginAsSeller) {
         navigate("/seller");
       } else {
         navigate("/");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* LEFT */}
-      <div className="hidden lg:flex w-1/2 bg-blue-600 text-white pt-[200px] justify-center">
-        <div className="px-10">
-          <h1 className="text-4xl font-bold leading-tight">
-            Hệ thống <br />
-            Thương mại điện tử <span className="text-yellow-400">Bàn Ghế Công Thái Học</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-orange-100">
+      <div className="grid min-h-screen lg:grid-cols-2">
+        <div className="hidden lg:flex flex-col justify-center px-16 text-white bg-blue-700">
+          <p className="mb-4 text-sm uppercase tracking-[0.35em] text-blue-100">
+            TLDQ-GO
+          </p>
+          <h1 className="max-w-lg text-5xl font-black leading-tight">
+            Hệ thống thương mại điện tử
+            <span className="block mt-2 text-orange-300">Bàn Ghế Công Thái Học</span>
           </h1>
-          <p className="mt-4">Sức khoẻ của bạn là niềm vui của chúng tôi</p>
+          <p className="max-w-md mt-6 text-blue-100">
+            Đăng nhập theo vai trò khách hàng hoặc người bán, tùy theo nhu cầu sử dụng.
+          </p>
         </div>
-      </div>
 
-      {/* RIGHT */}
-      <div className="w-full lg:w-1/2 flex pt-[100px] justify-center bg-gray-50">
-        <div className="w-full max-w-md p-6">
-          <h2 className="mb-4 text-2xl font-semibold text-center">Đăng nhập</h2>
+        <div className="flex items-center justify-center px-5 py-12">
+          <div className="w-full max-w-md p-8 bg-white shadow-2xl rounded-3xl ring-1 ring-black/5">
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-bold text-slate-900">Đăng Nhập</h2>
+            </div>
 
-          {/* Login Type Toggle */}
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="mb-6 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
               <button
+                type="button"
                 onClick={() => setLoginAsSeller(false)}
-                className={`px-4 py-2 text-sm rounded-md transition ${
-                  !loginAsSeller
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`rounded-xl px-4 py-3 text-sm font-semibold transition ${!loginAsSeller
+                  ? "bg-white text-blue-700 shadow"
+                  : "text-slate-500 hover:text-slate-700"
+                  }`}
               >
                 Khách hàng
               </button>
               <button
+                type="button"
                 onClick={() => setLoginAsSeller(true)}
-                className={`px-4 py-2 text-sm rounded-md transition ${
-                  loginAsSeller
-                    ? "bg-orange-500 text-white"
-                    : "text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`rounded-xl px-4 py-3 text-sm font-semibold transition ${loginAsSeller
+                  ? "bg-orange-500 text-white shadow"
+                  : "text-slate-500 hover:text-slate-700"
+                  }`}
               >
                 Người bán
               </button>
             </div>
-          </div>
 
-          {/* Google Login */}
-          <button className="flex items-center justify-center w-full gap-2 py-3 mb-4 border rounded-lg hover:bg-gray-100">
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="google"
-              className="w-5 h-5"
-            />
-            <span className="text-sm">Đăng nhập với Google</span>
-          </button>
-
-          <p className="mb-4 text-center text-gray-400">Hoặc</p>
-
-          {/* Form */}
-          <div className="space-y-4">
-            <Input
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            {/* Password with toggle */}
-            <div className="relative">
+            <div className="space-y-4">
               <Input
-                placeholder="Mật khẩu"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute cursor-pointer right-3 top-3"
-              >
-                {showPassword ? "🙈" : "👁"}
-              </span>
-            </div>
 
-            {/* Buttons */}
-            <div className="flex gap-3">
+              <div className="relative">
+                <Input
+                  placeholder="Mật khẩu"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute inset-y-0 right-3 text-sm text-slate-500"
+                >
+                  {showPassword ? "Ẩn" : "Hiện"}
+                </button>
+              </div>
+
+              <div className="-mt-2 flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-blue-600 transition hover:text-blue-700 hover:underline"
+                >
+                  Quên mật khẩu?
+                </Link>
+              </div>
+
               <button
+                type="button"
                 onClick={handleLogin}
-                className="w-1/2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700 py-3"
+                disabled={loading}
+                className={`w-full rounded-xl py-3 font-semibold text-white transition ${loginAsSeller
+                  ? "bg-orange-500 hover:bg-orange-600"
+                  : "bg-blue-600 hover:bg-blue-700"
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
               >
-                Đăng nhập
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
 
-              <Link to="/register" className="w-1/2 text-center font-semibold text-blue-600 transition border border-blue-600 rounded-lg hover:bg-blue-50 py-3 block">
-                Đăng ký
-              </Link>
-            </div>
+              <div className="flex gap-3">
+                <Link
+                  to="/register"
+                  className="flex-1 rounded-xl border border-blue-200 px-4 py-3 text-center font-semibold text-blue-700 transition hover:bg-blue-50"
+                >
+                  Đăng ký
+                </Link>
+                <Link
+                  to="/register-seller"
+                  className="flex-1 rounded-xl border border-orange-200 px-4 py-3 text-center font-semibold text-orange-600 transition hover:bg-orange-50"
+                >
+                  Bán hàng
+                </Link>
+              </div>
 
-            {/* Forgot */}
-            <p className="text-sm text-center">
-              <Link to="/forgot-password" className="text-blue-600 hover:underline">
-                Quên mật khẩu?
-              </Link>
-            </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

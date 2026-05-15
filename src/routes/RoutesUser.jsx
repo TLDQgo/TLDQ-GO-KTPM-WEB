@@ -5,6 +5,7 @@ import Cart from "../pages/Cart";
 import PaymentResult from "../pages/PaymentResult";
 import Checkout from "../pages/Checkout";
 import OrderHistory from "../pages/OrderHistory";
+import SearchResults from "../pages/SearchResults";
 import { UserLayout } from "./DashBoardLayout";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
@@ -109,6 +110,7 @@ export default function RoutesUser() {
       />
       <Route path="/checkout" element={<UserLayout><Checkout /></UserLayout>} />
       <Route path="/don-hang" element={<UserLayout><OrderHistory /></UserLayout>} />
+      <Route path="/tim-kiem" element={<UserLayout><SearchResults /></UserLayout>} />
       <Route path="/thanh-toan/ket-qua" element={<PaymentResult />} />
     </>
   );

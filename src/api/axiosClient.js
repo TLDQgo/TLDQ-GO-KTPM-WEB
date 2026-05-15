@@ -36,7 +36,38 @@ axiosClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (refreshToken) {
+        try {
+          const res = await axios.post(
+            `${API_BASE_URL}/api/users/refresh-token`,
+            { refreshToken }
+          );
+          const newToken = res.data?.token;
+          if (newToken) {
+            localStorage.setItem("token", newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return axiosClient(originalRequest);
+          }
+        } catch {
+          // refresh thất bại — tiếp tục logout bên dưới
+        }
+      }
+
+      // Xóa session và về trang login
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event("auth-change"));
+      window.location.href = "/login";
+    }
+
     throw error;
   }
 );

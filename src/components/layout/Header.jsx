@@ -1,12 +1,88 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, ClipboardList } from "lucide-react";
+import { ShoppingCart, ClipboardList, Search, Bell } from "lucide-react";
+import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 import cartApi from "../../api/cartApi";
+import orderApi from "../../api/orderApi";
+
+const SOCKET_URL =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? import.meta.env.VITE_API_URL || ""
+    : "";
 
 const Header = () => {
   const [user, setUser] = useState(null);
+  const [keyword, setKeyword] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [showNotif, setShowNotif] = useState(false);
+  const notifRef = useRef(null);
   const navigate = useNavigate();
+
+  const handleSearch = () => {
+    const q = keyword.trim();
+    if (!q) return;
+    navigate(`/tim-kiem?q=${encodeURIComponent(q)}`);
+  };
+
+  // Lấy danh sách notifications khi user đăng nhập
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications", user?._id],
+    queryFn: () => orderApi.getNotifications(user._id),
+    enabled: !!user?._id,
+    staleTime: 30 * 1000,
+  });
+
+  useEffect(() => {
+    const list = notifData?.data ?? notifData;
+    if (Array.isArray(list)) setNotifications(list);
+  }, [notifData]);
+
+  // Kết nối socket.io khi user đăng nhập
+  useEffect(() => {
+    if (!user?._id) return;
+    const socket = io(SOCKET_URL, {
+      query: { userId: user._id },
+      transports: ["websocket", "polling"],
+    });
+    socket.on("notification", (data) => {
+      setNotifications((prev) => [{ ...data, _id: Date.now(), read: false }, ...prev]);
+      toast.info(data.title, { autoClose: 4000 });
+    });
+    return () => socket.disconnect();
+  }, [user?._id]);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotif(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkRead = async (notif) => {
+    if (notif.read || !notif._id) return;
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === notif._id ? { ...n, read: true } : n))
+    );
+    try {
+      await orderApi.markNotificationRead(notif._id);
+    } catch { /* silent */ }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!user?._id) return;
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await orderApi.markAllNotificationsRead(user._id);
+    } catch { /* silent */ }
+  };
   const { data: cartData } = useQuery({
     queryKey: ["cart", user?._id],
     queryFn: () => cartApi.getCart(user._id),
@@ -59,24 +135,25 @@ const Header = () => {
           <div className="text-blue-600 font-bold text-xl">TLDQ-GO</div>
         </Link>
 
-        {/* MENU */}
-        <nav className="hidden md:flex gap-8 text-gray-700 items-center">
-          <Link to="/" className="hover:text-blue-600">
-            Trang Chủ
-          </Link>
-          <a href="#" className="hover:text-blue-600">
-            Giới Thiệu
-          </a>
-          <a href="#" className="hover:text-blue-600">
-            Sản Phẩm
-          </a>
-          <a href="#" className="hover:text-blue-600">
-            Liên Hệ
-          </a>
-          <a href="#" className="hover:text-blue-600">
-            Tin Tức
-          </a>
-        </nav>
+        {/* SEARCH BAR */}
+        <div className="hidden md:flex flex-1 max-w-md mx-6">
+          <div className="flex w-full border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-400">
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Tìm kiếm sản phẩm..."
+              className="flex-1 px-4 py-2 text-sm outline-none"
+            />
+            <button
+              onClick={handleSearch}
+              className="px-3 bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
         {/* ACTIONS */}
         <div className="flex gap-3 items-center">
@@ -102,6 +179,64 @@ const Header = () => {
             >
               <ClipboardList className="w-5 h-5" />
             </Link>
+          )}
+
+          {/* NOTIFICATION BELL — chỉ hiện khi đã đăng nhập */}
+          {user && (
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setShowNotif((v) => !v)}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] leading-none rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 font-bold">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotif && (
+                <div className="absolute right-0 top-12 w-80 bg-white border rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b">
+                    <span className="font-semibold text-sm text-gray-800">Thông báo</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Đánh dấu tất cả đã đọc
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-center text-sm text-gray-400 py-8">Chưa có thông báo</p>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n._id}
+                          onClick={() => handleMarkRead(n)}
+                          className={`px-4 py-3 border-b cursor-pointer hover:bg-gray-50 transition ${
+                            !n.read ? "bg-blue-50" : ""
+                          }`}
+                        >
+                          <p className={`text-sm font-medium ${!n.read ? "text-blue-800" : "text-gray-800"}`}>
+                            {n.title}
+                          </p>
+                          {n.message && (
+                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {n.createdAt ? new Date(n.createdAt).toLocaleString("vi-VN") : ""}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <button

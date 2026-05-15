@@ -106,6 +106,15 @@ export default function ProductDetail() {
 
   const reviews = reviewsData?.data ?? [];
 
+  const { data: relatedData } = useQuery({
+    queryKey: ["related", id],
+    queryFn: () => productApi.getRelated(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const relatedProducts = relatedData?.data ?? [];
+
   const reviewMutation = useMutation({
     mutationFn: (data) => productApi.createReview(id, data),
     onSuccess: () => {
@@ -497,8 +506,39 @@ export default function ProductDetail() {
             </div>
           )}
         </div>
-      </div>
 
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Sản phẩm liên quan
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => navigate(`/san-pham/${item._id}`)}
+                  className="overflow-hidden transition bg-gray-50 cursor-pointer rounded-xl hover:shadow-md border border-gray-100"
+                >
+                  <img
+                    src={item.images?.[0] || "https://via.placeholder.com/150"}
+                    alt={item.name}
+                    className="object-cover w-full h-40"
+                  />
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-2 text-gray-800">
+                      {item.name}
+                    </p>
+                    <div className="mt-2">
+                      <ProductPrice product={item} className="text-sm" showBadge={false} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

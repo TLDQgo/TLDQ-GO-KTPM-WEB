@@ -27,6 +27,7 @@ const Login = () => {
       }
       toast.success(res.message || "Đăng nhập thành công!");
       localStorage.setItem("token", res.token);
+      if (res.refreshToken) localStorage.setItem("refreshToken", res.refreshToken);
       setUser(res.user);
       localStorage.setItem("user", JSON.stringify(res.user));
       window.dispatchEvent(new Event("auth-change"));

@@ -57,6 +57,7 @@ export default function RegisterSeller() {
 
         if (res?.token) {
           localStorage.setItem("token", res.token);
+          if (res.refreshToken) localStorage.setItem("refreshToken", res.refreshToken);
         }
         if (res?.user) {
           setUser(res.user);

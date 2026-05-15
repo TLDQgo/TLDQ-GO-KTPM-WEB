@@ -40,6 +40,15 @@ const orderApi = {
 
   verifyVNPayPayment: (queryString) =>
     orderApiClient.get(`/orders/vnpay/verify?${queryString}`),
+
+  getNotifications: (userId) =>
+    orderApiClient.get(`/orders/notifications/${userId}`),
+
+  markNotificationRead: (id) =>
+    orderApiClient.patch(`/orders/notifications/${id}/read`),
+
+  markAllNotificationsRead: (userId) =>
+    orderApiClient.patch(`/orders/notifications/user/${userId}/read-all`),
 };
 
 export default orderApi;

@@ -28,7 +28,7 @@ export default function LoginSeller() {
 
     try {
       const res = await authApi.loginSeller(form);
-      const { token, user } = res;
+      const { token, refreshToken, user } = res;
 
       // Kiểm tra role phải là 'seller'
       if (user?.role !== "seller") {
@@ -38,6 +38,7 @@ export default function LoginSeller() {
 
       // Lưu token riêng, user qua store (store tự sync localStorage)
       localStorage.setItem("token", token);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
       setUser(user);
 
       window.dispatchEvent(new Event("auth-change"));

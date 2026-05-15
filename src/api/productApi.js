@@ -53,6 +53,10 @@ const productApi = {
 
   getById: (id) => axiosClient.get(`/products/${id}`),
 
+  search: (params) => axiosClient.get("/products/search", { params }),
+
+  getRelated: (productId) => axiosClient.get(`/products/${productId}/related`),
+
   getReviews: (productId) => axiosClient.get(`/products/${productId}/reviews`),
 
   createReview: (productId, data) =>

@@ -16,9 +16,11 @@ export default function LoginAdmin() {
     try {
       const res = await authApi.adminLogin(form);
       const token = res?.token ?? res?.data?.token;
+      const refreshToken = res?.refreshToken ?? res?.data?.refreshToken;
       const user = res?.user ?? res?.data?.user;
       if (!token) throw new Error("Đăng nhập thất bại");
       localStorage.setItem("token", token);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("user", JSON.stringify(user));
       navigate("/admin");
     } catch (err) {

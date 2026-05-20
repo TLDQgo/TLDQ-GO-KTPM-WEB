@@ -7,6 +7,7 @@ import OrderManagementSeller from "../pages/seller/OrderManagementSeller";
 import SellerSettings from "../pages/seller/SellerSettings";
 import VoucherManagementSeller from "../pages/seller/VoucherManagementSeller";
 import RevenueStatsSeller from "../pages/seller/RevenueStatsSeller";
+import FlashSaleManagement from "../pages/seller/FlashSaleManagement";
 import useAuthStore from "../store/useAuthStore";
 
 function SellerPrivateRoute({ children }) {
@@ -86,6 +87,16 @@ export default function RoutesSeller() {
           <SellerPrivateRoute>
             <SellerLayout>
               <RevenueStatsSeller />
+            </SellerLayout>
+          </SellerPrivateRoute>
+        }
+      />
+      <Route
+        path="/seller/flash-sale"
+        element={
+          <SellerPrivateRoute>
+            <SellerLayout>
+              <FlashSaleManagement />
             </SellerLayout>
           </SellerPrivateRoute>
         }

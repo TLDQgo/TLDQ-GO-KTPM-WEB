@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -21,18 +21,20 @@ export default function SearchResults() {
   const q = searchParams.get("q") || "";
   const sort = searchParams.get("sort") || "newest";
   const page = parseInt(searchParams.get("page") || "1");
+  const minRatingParam = parseInt(searchParams.get("minRating") || "0");
 
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["search", q, sort, minPrice, maxPrice, page],
+    queryKey: ["search", q, sort, minPrice, maxPrice, minRatingParam, page],
     queryFn: () =>
       productApi.search({
         q: q || undefined,
         sort,
         minPrice: minPrice || undefined,
         maxPrice: maxPrice || undefined,
+        minRating: minRatingParam > 0 ? minRatingParam : undefined,
         page,
         limit: 12,
       }),
@@ -87,8 +89,13 @@ export default function SearchResults() {
     const next = new URLSearchParams(searchParams);
     next.delete("minPrice");
     next.delete("maxPrice");
+    next.delete("minRating");
     next.set("page", "1");
     setSearchParams(next);
+  };
+
+  const handleRatingFilter = (star) => {
+    updateParams({ minRating: star === minRatingParam ? undefined : star });
   };
 
   return (
@@ -136,6 +143,25 @@ export default function SearchResults() {
             </div>
 
             <div>
+              <h3 className="font-semibold text-sm text-gray-700 mb-2">Đánh giá tối thiểu</h3>
+              <div className="space-y-1">
+                {[5, 4, 3, 2, 1].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => handleRatingFilter(star)}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition ${
+                      minRatingParam === star
+                        ? "bg-yellow-400 text-white font-medium"
+                        : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {"★".repeat(star)}{"☆".repeat(5 - star)}{star < 5 ? " trở lên" : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <h3 className="font-semibold text-sm text-gray-700 mb-2">Khoảng giá</h3>
               <div className="space-y-2">
                 <input
@@ -158,7 +184,7 @@ export default function SearchResults() {
                 >
                   Áp dụng
                 </button>
-                {(minPrice || maxPrice) && (
+                {(minPrice || maxPrice || minRatingParam > 0) && (
                   <button
                     onClick={handleResetFilter}
                     className="w-full border text-sm py-1.5 rounded-lg hover:bg-gray-50 transition text-gray-600"

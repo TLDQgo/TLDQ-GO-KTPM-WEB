@@ -61,6 +61,14 @@ const productApi = {
 
   createReview: (productId, data) =>
     axiosClient.post(`/products/${productId}/reviews`, data),
+
+  // Flash Sale
+  getActiveFlashSales: () => axiosClient.get("/products/flash-sales/active"),
+  getFlashSale: (productId) => axiosClient.get(`/products/${productId}/flash-sale`),
+  createFlashSale: (data) => axiosClient.post("/products/flash-sales", data),
+  getFlashSalesBySeller: (sellerId) => axiosClient.get(`/products/flash-sales/seller/${sellerId}`),
+  updateFlashSale: (id, data) => axiosClient.patch(`/products/flash-sales/${id}`, data),
+  deleteFlashSale: (id, sellerId) => axiosClient.delete(`/products/flash-sales/${id}`, { data: { seller_id: sellerId } }),
 };
 
 export default productApi;

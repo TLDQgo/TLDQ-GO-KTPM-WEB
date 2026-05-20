@@ -128,7 +128,7 @@ const Header = () => {
     navigate("/register-seller");
   };
   return (
-    <header className="w-full border-b bg-white">
+    <header className="w-full border-b bg-white sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
         {/* LOGO */}
         <Link to="/">

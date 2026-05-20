@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import {
   LineChart,
   Line,
@@ -83,19 +85,51 @@ export default function SystemStats() {
     value: item.count,
   }));
 
+  const exportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const sheetRevenue = XLSX.utils.json_to_sheet(
+      revenueByDate.map((r) => ({ Ngày: r.date, "Doanh thu (đ)": r.revenue }))
+    );
+    XLSX.utils.book_append_sheet(wb, sheetRevenue, "Doanh thu theo ngày");
+
+    const sheetTop = XLSX.utils.json_to_sheet(
+      topProducts.map((p, i) => ({
+        "#": i + 1,
+        "Sản phẩm": p.product_name,
+        "Số lượng bán": p.total_quantity,
+        "Doanh thu (đ)": p.total_revenue,
+      }))
+    );
+    XLSX.utils.book_append_sheet(wb, sheetTop, "Top sản phẩm");
+
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    saveAs(new Blob([buf], { type: "application/octet-stream" }), `thong-ke-he-thong-${period}-${Date.now()}.xlsx`);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-800">Thống kê hệ thống</h1>
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-          className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"
-        >
-          {PERIODS.map((p) => (
-            <option key={p.value} value={p.value}>{p.label}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"
+          >
+            {PERIODS.map((p) => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+          {!isLoading && (
+            <button
+              onClick={exportExcel}
+              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+            >
+              Xuất Excel
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (

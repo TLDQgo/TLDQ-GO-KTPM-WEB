@@ -1,10 +1,10 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import { FaFacebook, FaYoutube } from "react-icons/fa";
 
 export default function Footer() {
   return (
     <footer className="bg-gray-100 mt-10 pt-10 pb-6 text-sm text-gray-700">
-      <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-5 gap-8">
         {/* COLUMN 1 */}
         <div>
           <h3 className="font-bold uppercase mb-3">
@@ -76,6 +76,28 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* COLUMN 3.5 — Kênh người bán */}
+        <div>
+          <h3 className="font-bold uppercase mb-3">KÊNH NGƯỜI BÁN</h3>
+          <ul className="space-y-2">
+            <li>
+              <Link to="/register-seller" className="hover:text-red-500 transition">
+                Đăng ký bán hàng
+              </Link>
+            </li>
+            <li>
+              <Link to="/login-seller" className="hover:text-red-500 transition">
+                Đăng nhập Seller
+              </Link>
+            </li>
+            <li>
+              <Link to="/seller" className="hover:text-red-500 transition">
+                Quản lý cửa hàng
+              </Link>
+            </li>
+          </ul>
+        </div>
+
         {/* COLUMN 4 */}
         <div>
           <h3 className="font-bold uppercase mb-3">KẾT NỐI VỚI CHÚNG TÔI</h3>
@@ -103,8 +125,15 @@ export default function Footer() {
       </div>
 
       {/* BOTTOM */}
-      <div className="text-center text-gray-500 text-xs mt-8">
-        © 2026 TLDQ-GO. All rights reserved.
+      <div className="flex items-center justify-between max-w-7xl mx-auto px-4 text-gray-500 text-xs mt-8">
+        <span>© 2026 TLDQ-GO. All rights reserved.</span>
+        <Link
+          to="/admin/login"
+          className="text-gray-400 hover:text-gray-600 transition"
+          title="Quản trị hệ thống"
+        >
+          Quản trị
+        </Link>
       </div>
     </footer>
   );

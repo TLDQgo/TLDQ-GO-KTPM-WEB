@@ -7,6 +7,7 @@ import productApi from "../api/productApi";
 import authApi from "../api/authApi";
 import cartApi from "../api/cartApi";
 import ProductPrice from "../components/common/ProductPrice";
+import FlashSaleCountdown from "../components/common/FlashSaleCountdown";
 import useAuthStore from "../store/useAuthStore";
 
 function StarRating({ value = 0, max = 5, onChange }) {
@@ -115,6 +116,16 @@ export default function ProductDetail() {
 
   const relatedProducts = relatedData?.data ?? [];
 
+  const { data: flashSaleData } = useQuery({
+    queryKey: ["flashSale", id],
+    queryFn: () => productApi.getFlashSale(id),
+    enabled: !!id,
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+  const flashSale = flashSaleData?.data ?? null;
+
   const reviewMutation = useMutation({
     mutationFn: (data) => productApi.createReview(id, data),
     onSuccess: () => {
@@ -134,14 +145,16 @@ export default function ProductDetail() {
       toast.warning("Vui lòng đăng nhập để đặt hàng!");
       return;
     }
+    const originalPrice = product.original_price ?? product.price;
+    const finalPrice = flashSale ? flashSale.sale_price : (product.discount_price ?? product.price);
     navigate("/checkout", {
       state: {
         items: [{
           product_id: product._id,
           product_name: product.name,
           quantity: qty,
-          price: product.original_price ?? product.price,
-          discount_price: product.discount_price ?? product.price,
+          price: originalPrice,
+          discount_price: finalPrice,
           image: Array.isArray(product.images) ? product.images[0] : product.image_url,
         }],
         from: "product",
@@ -302,8 +315,25 @@ export default function ProductDetail() {
                 </span>
               </div>
 
-              <div className="py-3 border-t border-b border-gray-100">
-                <ProductPrice product={product} className="text-2xl" />
+              <div className="py-3 border-t border-b border-gray-100 space-y-2">
+                {flashSale ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-3xl font-bold text-red-600">
+                        {Number(flashSale.sale_price).toLocaleString("vi-VN")}đ
+                      </span>
+                      <span className="text-lg text-gray-400 line-through">
+                        {Number(flashSale.original_price).toLocaleString("vi-VN")}đ
+                      </span>
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        -{flashSale.discount_percent}%
+                      </span>
+                    </div>
+                    <FlashSaleCountdown endTime={flashSale.end_time} />
+                  </div>
+                ) : (
+                  <ProductPrice product={product} className="text-2xl" />
+                )}
               </div>
 
               <div className="flex items-center gap-2">

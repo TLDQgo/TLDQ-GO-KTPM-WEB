@@ -13,6 +13,7 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  Zap,
 } from "lucide-react";
 
 export default function SidebarSeller() {
@@ -103,6 +104,20 @@ export default function SidebarSeller() {
           >
             <Tag size={18} />
             <span>Khuyến mãi</span>
+          </li>
+        </Link>
+
+        <Link to="/seller/flash-sale">
+          <li
+            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
+              activeItem === "flash-sale"
+                ? "bg-red-50 text-red-500"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            onClick={() => handleItemClick("flash-sale")}
+          >
+            <Zap size={18} />
+            <span>Flash Sale</span>
           </li>
         </Link>
 

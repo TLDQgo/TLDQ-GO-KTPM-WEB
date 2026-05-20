@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const API = "http://127.0.0.1:3000/api";
 
@@ -112,6 +114,23 @@ export default function ProductManagementAdmin() {
     }
   };
 
+  const exportExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      products.map((p) => ({
+        "Tên sản phẩm": p.name,
+        "Danh mục": p.categoryName,
+        "Giá (đ)": p.price,
+        "Số lượng": p.quantity,
+        "Trạng thái": p.status,
+        "Ngày tạo": p.createdAt ? new Date(p.createdAt).toLocaleDateString("vi-VN") : "",
+      }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sản phẩm");
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    saveAs(new Blob([buf], { type: "application/octet-stream" }), `san-pham-${Date.now()}.xlsx`);
+  };
+
   const getStatusStyle = (status) => {
     switch (status) {
       case "approved":
@@ -135,16 +154,25 @@ export default function ProductManagementAdmin() {
           className="px-4 py-2 border rounded-lg w-full md:w-1/3"
         />
 
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
-        >
-          <option value="all">Tất cả</option>
-          <option value="pending">Chờ duyệt</option>
-          <option value="approved">Đã duyệt</option>
-          <option value="rejected">Đã hủy</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="all">Tất cả</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="rejected">Đã hủy</option>
+          </select>
+          <button
+            onClick={exportExcel}
+            disabled={products.length === 0}
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            Xuất Excel
+          </button>
+        </div>
       </div>
 
       {/* ================= TABLE ================= */}

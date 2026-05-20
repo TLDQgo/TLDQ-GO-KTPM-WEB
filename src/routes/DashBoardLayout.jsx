@@ -8,7 +8,7 @@ import SidebarAdmin from "../components/layout/SidebarAdmin";
 const UserLayout = ({ children }) => {
   return (
     <>
-      <div className="bg-white shadow">
+      <div className="bg-white shadow sticky top-0 z-50">
         <Header />
       </div>
       <div className="px-[100px]">

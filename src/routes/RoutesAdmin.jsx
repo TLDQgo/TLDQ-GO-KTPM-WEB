@@ -1,48 +1,63 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "./DashBoardLayout";
 import HomeAdmin from "../pages/admin/HomeAdmin";
 import UserManagement from "../pages/admin/UserManagement";
 import SystemStats from "../pages/admin/SystemStats";
 import LoginAdmin from "../pages/admin/LoginAdmin";
 import ProductManagementAdmin from "../pages/admin/ProductManagementAdmin";
+import useAuthStore from "../store/useAuthStore";
+
+function AdminPrivateRoute({ children }) {
+  const user = useAuthStore((s) => s.user);
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return children;
+}
 
 export default function RoutesAdmin() {
   return (
     <>
-      {/* Login — no layout */}
       <Route path="/admin/login" element={<LoginAdmin />} />
 
-      {/* Admin dashboard routes */}
       <Route
         path="/admin"
         element={
-          <AdminLayout>
-            <HomeAdmin />
-          </AdminLayout>
+          <AdminPrivateRoute>
+            <AdminLayout>
+              <HomeAdmin />
+            </AdminLayout>
+          </AdminPrivateRoute>
         }
       />
       <Route
         path="/admin/users"
         element={
-          <AdminLayout>
-            <UserManagement />
-          </AdminLayout>
+          <AdminPrivateRoute>
+            <AdminLayout>
+              <UserManagement />
+            </AdminLayout>
+          </AdminPrivateRoute>
         }
       />
       <Route
         path="/admin/quan-ly-san-pham"
         element={
-          <AdminLayout>
-            <ProductManagementAdmin />
-          </AdminLayout>
+          <AdminPrivateRoute>
+            <AdminLayout>
+              <ProductManagementAdmin />
+            </AdminLayout>
+          </AdminPrivateRoute>
         }
       />
       <Route
         path="/admin/stats"
         element={
-          <AdminLayout>
-            <SystemStats />
-          </AdminLayout>
+          <AdminPrivateRoute>
+            <AdminLayout>
+              <SystemStats />
+            </AdminLayout>
+          </AdminPrivateRoute>
         }
       />
     </>

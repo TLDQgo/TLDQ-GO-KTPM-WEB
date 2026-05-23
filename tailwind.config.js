@@ -17,6 +17,7 @@ export default {
     extend: {
       fontFamily: {
         roboto: ["Roboto", "sans-serif"],
+        display: ["Space Grotesk", "sans-serif"],
       },
     },
   },

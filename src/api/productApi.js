@@ -69,6 +69,9 @@ const productApi = {
   getFlashSalesBySeller: (sellerId) => axiosClient.get(`/products/flash-sales/seller/${sellerId}`),
   updateFlashSale: (id, data) => axiosClient.patch(`/products/flash-sales/${id}`, data),
   deleteFlashSale: (id, sellerId) => axiosClient.delete(`/products/flash-sales/${id}`, { data: { seller_id: sellerId } }),
+
+  aiChat: (payload) => axiosClient.post("/products/ai/chat", payload),
+  aiHistory: () => axiosClient.get("/products/ai/history"),
 };
 
 export default productApi;

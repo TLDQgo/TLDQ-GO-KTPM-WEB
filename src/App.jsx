@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import RoutesUser from "./routes/RoutesUser";
 import RoutesSeller from "./routes/RoutesSeller";
 import RoutesAdmin from "./routes/RoutesAdmin";
+import AIChatbox from "./components/common/AIChatbox";
 function App() {
   return (
     <Router>
@@ -15,6 +16,7 @@ function App() {
         <Routes>{RoutesSeller()}</Routes>
         <Routes>{RoutesAdmin()}</Routes>
       </div>
+      <AIChatbox />
       <ToastContainer autoClose={1500} />
     </Router>
   );

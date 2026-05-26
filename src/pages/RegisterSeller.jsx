@@ -15,10 +15,11 @@ export default function RegisterSeller() {
   const isCustomerLoggedIn = user?.role === "customer";
 
   const [form, setForm] = useState({
-    shopName: user?.full_name || "",
+    personalName: user?.full_name || "",
+    shopName: "",
     email: user?.email || "",
     phone: user?.phone || "",
-    address: "",
+    addressLine: "",
     password: "",
     confirmPassword: "",
   });
@@ -30,7 +31,7 @@ export default function RegisterSeller() {
     if (!isCustomerLoggedIn) return;
     setForm((prev) => ({
       ...prev,
-      shopName: user?.full_name || "",
+      personalName: user?.full_name || "",
       email: user?.email || "",
       phone: user?.phone || "",
     }));
@@ -45,13 +46,34 @@ export default function RegisterSeller() {
     e.preventDefault();
     if (submitting) return;
 
+    const normalizedPersonalName = form.personalName.trim();
     const normalizedShopName = form.shopName.trim();
-    if (!normalizedShopName) { toast.error("Tên shop là bắt buộc"); return; }
+    const normalizedAddressLine = form.addressLine.trim();
+
+    if (!normalizedPersonalName) {
+      toast.error("Vui lòng nhập tên hiển thị cá nhân.");
+      return;
+    }
+
+    if (!normalizedShopName) {
+      toast.error("Tên shop là bắt buộc");
+      return;
+    }
+
+    if (!normalizedAddressLine) {
+      toast.error("Địa chỉ cửa hàng là bắt buộc");
+      return;
+    }
 
     setSubmitting(true);
     try {
       if (isCustomerLoggedIn) {
-        const res = await authApi.upgradeSeller({ phone: form.phone, full_name: normalizedShopName });
+        const res = await authApi.upgradeSeller({
+          phone: form.phone,
+          full_name: normalizedPersonalName,
+          shop_name: normalizedShopName,
+          address_line: normalizedAddressLine,
+        });
         if (res?.token) {
           localStorage.setItem("token", res.token);
           if (res.refreshToken) localStorage.setItem("refreshToken", res.refreshToken);
@@ -66,10 +88,12 @@ export default function RegisterSeller() {
       if (form.password !== form.confirmPassword) { toast.error("Mật khẩu không khớp!"); return; }
 
       const res = await authApi.registerSeller({
-        email: form.email,
+        email: form.email.trim(),
         password: form.password,
         phone: form.phone,
-        full_name: normalizedShopName,
+        full_name: normalizedPersonalName,
+        shop_name: normalizedShopName,
+        address_line: normalizedAddressLine,
       });
       toast.success(res?.message || "Đăng ký seller thành công! Vui lòng đăng nhập để tiếp tục.");
       navigate("/login-seller");
@@ -116,6 +140,16 @@ export default function RegisterSeller() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
+              name="personalName"
+              placeholder="Tên hiển thị cá nhân"
+              value={form.personalName}
+              onChange={handleChange}
+              className={INPUT_CLS}
+              required
+            />
+
+            <input
+              type="text"
               name="shopName"
               placeholder="Tên cửa hàng"
               value={form.shopName}
@@ -147,11 +181,12 @@ export default function RegisterSeller() {
 
             <input
               type="text"
-              name="address"
+              name="addressLine"
               placeholder="Địa chỉ cửa hàng"
-              value={form.address}
+              value={form.addressLine}
               onChange={handleChange}
               className={INPUT_CLS}
+              required
             />
 
             {!isCustomerLoggedIn && (

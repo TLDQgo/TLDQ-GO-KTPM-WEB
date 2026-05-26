@@ -18,15 +18,21 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       toast.error("Vui lòng nhập email và mật khẩu");
       return;
     }
     setLoading(true);
     try {
+      const credentials = { email: email.trim(), password };
       const res = loginAsSeller
-        ? await authApi.loginSeller({ email, password })
-        : await authApi.loginUser({ email, password });
+        ? await authApi.loginSeller(credentials)
+        : await authApi.loginUser(credentials);
+
+      if (loginAsSeller && res.user?.role !== "seller") {
+        toast.error("Tài khoản này không phải Seller. Vui lòng dùng trang đăng nhập khách hàng.");
+        return;
+      }
 
       localStorage.setItem("token", res.token);
       if (res.refreshToken) localStorage.setItem("refreshToken", res.refreshToken);
@@ -139,6 +145,13 @@ export default function Login() {
               Chưa có tài khoản?{" "}
               <Link to="/register" className="text-blue-600 font-medium hover:underline">
                 Đăng ký ngay
+              </Link>
+            </p>
+
+            <p className="text-center text-sm text-gray-500">
+              Muốn bán hàng?{" "}
+              <Link to="/register-seller" className="text-orange-500 font-medium hover:underline">
+                Đăng ký Seller
               </Link>
             </p>
           </div>

@@ -120,11 +120,11 @@ const Header = () => {
     navigate("/");
   };
   const handleSellerClick = () => {
-    // if (user?.role === "seller") {
-    //   navigate("/seller");
-    // } else {
-    //   navigate("/register-seller");
-    // }
+    if (user?.role === "seller") {
+      navigate("/seller");
+      return;
+    }
+
     navigate("/register-seller");
   };
   return (

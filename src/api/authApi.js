@@ -1,5 +1,11 @@
 import axiosClient from "./axiosClient";
 
+function multipartConfig(payload) {
+  return payload instanceof FormData
+    ? { headers: { "Content-Type": "multipart/form-data" } }
+    : undefined;
+}
+
 const authApi = {
   login: (data) => {
     return axiosClient.post("users/login", data);
@@ -22,14 +28,17 @@ const authApi = {
   forgotPassword: (email) => {
     return axiosClient.post("users/forgot-password", { email });
   },
+  getProfile: () => {
+    return axiosClient.get("users/me");
+  },
   resetPassword: (token, newPassword) => {
     return axiosClient.post("users/reset-password", { token, newPassword });
   },
   updateProfile: (data) => {
-    return axiosClient.put("users/user/profile", data);
+    return axiosClient.put("users/user/profile", data, multipartConfig(data));
   },
   updateSellerProfile: (data) => {
-    return axiosClient.put("users/seller/profile", data);
+    return axiosClient.put("users/seller/profile", data, multipartConfig(data));
   },
   changePassword: (currentPassword, newPassword) => {
     return axiosClient.post("users/change-password", { currentPassword, newPassword });
@@ -38,7 +47,7 @@ const authApi = {
     return axiosClient.get("users/seller/setup-status");
   },
   updateShopSettings: (data) => {
-    return axiosClient.put("users/seller/settings", data);
+    return axiosClient.put("users/seller/settings", data, multipartConfig(data));
   },
 
   getSellerPublicProfile: (sellerId) =>

@@ -22,10 +22,18 @@ export default function LoginSeller() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.email.trim() || !form.password) {
+      setErrorMsg("Vui lòng nhập email và mật khẩu.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
     try {
-      const res = await authApi.loginSeller(form);
+      const res = await authApi.loginSeller({
+        email: form.email.trim(),
+        password: form.password,
+      });
       const { token, refreshToken, user } = res;
       if (user?.role !== "seller") {
         setErrorMsg("Tài khoản này không phải Seller. Vui lòng dùng trang đăng nhập khác.");
@@ -106,6 +114,12 @@ export default function LoginSeller() {
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-xs text-orange-500 hover:underline">
+                Quên mật khẩu?
+              </Link>
             </div>
 
             <button

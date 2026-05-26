@@ -10,6 +10,8 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [addressLine, setAddressLine] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
@@ -17,10 +19,15 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isSeller = role === "seller";
 
   const handleRegister = async () => {
-    if (!fullName || !email || !password) {
+    if (!fullName.trim() || !email.trim() || !password) {
       toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+    if (isSeller && !shopName.trim()) {
+      toast.error("Vui lòng nhập tên cửa hàng");
       return;
     }
     if (password !== rePassword) {
@@ -29,7 +36,19 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const res = await authApi.register({ email, password, full_name: fullName, role });
+      const payload = {
+        email: email.trim(),
+        password,
+        full_name: fullName.trim(),
+        role,
+      };
+
+      if (isSeller) {
+        payload.shop_name = shopName.trim();
+        payload.address_line = addressLine.trim();
+      }
+
+      const res = await authApi.register(payload);
       toast.success(res.message || "Đăng ký thành công!");
       navigate("/login");
     } catch (err) {
@@ -68,12 +87,34 @@ export default function Register() {
           <div className="space-y-4">
             <input
               type="text"
-              placeholder="Họ và tên"
+              placeholder={isSeller ? "Tên hiển thị cá nhân" : "Họ và tên"}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               onKeyDown={handleKeyDown}
               className={INPUT_CLS}
             />
+
+            {isSeller && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Tên cửa hàng"
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className={INPUT_CLS}
+                />
+                <input
+                  type="text"
+                  placeholder="Địa chỉ cửa hàng"
+                  value={addressLine}
+                  onChange={(e) => setAddressLine(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className={INPUT_CLS}
+                />
+              </>
+            )}
+
             <input
               type="email"
               placeholder="Email"
@@ -143,7 +184,9 @@ export default function Register() {
             <button
               onClick={handleRegister}
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60"
+              className={`w-full py-3 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 ${
+                isSeller ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? "Đang đăng ký..." : "Tạo tài khoản"}

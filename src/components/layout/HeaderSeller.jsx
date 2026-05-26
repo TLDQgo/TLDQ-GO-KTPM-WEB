@@ -1,12 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bell, Mail, ShoppingCart, Menu, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import authApi from "../../api/authApi";
 import useAuthStore from "../../store/useAuthStore";
 
 export default function HeaderSeller() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const logout = useAuthStore((s) => s.logout);
+  const [shopProfile, setShopProfile] = useState(user?.sellerProfile || null);
+  const [fetchedSellerId, setFetchedSellerId] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadShopProfile = async () => {
+      if (!user || user.role !== "seller") {
+        setShopProfile(null);
+        setFetchedSellerId(null);
+        return;
+      }
+
+      if (user.sellerProfile?.logo_url || fetchedSellerId === user._id) {
+        setShopProfile(user.sellerProfile);
+        return;
+      }
+
+      try {
+        const res = await authApi.getShopSetupStatus();
+        if (alive) setFetchedSellerId(user._id);
+        if (!alive || !res?.profile) return;
+
+        setShopProfile(res.profile);
+        setUser({
+          ...user,
+          sellerProfile: res.profile,
+        });
+      } catch {
+        if (alive) {
+          setFetchedSellerId(user._id);
+          setShopProfile(user.sellerProfile || null);
+        }
+      }
+    };
+
+    loadShopProfile();
+
+    return () => {
+      alive = false;
+    };
+  }, [fetchedSellerId, setUser, user]);
 
   const handleLogout = () => {
     logout();
@@ -15,11 +59,11 @@ export default function HeaderSeller() {
   };
 
   // Lấy chữ cái đầu để hiển thị avatar fallback
-  const initials = user?.full_name
-    ? user.full_name.charAt(0).toUpperCase()
-    : user?.email?.charAt(0).toUpperCase() ?? "S";
+  const shopName = shopProfile?.shop_name || user?.full_name || user?.email || "Nhà bán";
+  const shopLogo = shopProfile?.logo_url || "";
+  const initials = shopName.charAt(0).toUpperCase();
 
-  const displayName = user?.full_name || user?.email || "Nhà bán";
+  const displayName = shopName;
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white shadow fixed top-0 left-0 right-0 z-50">
@@ -62,10 +106,10 @@ export default function HeaderSeller() {
 
         {/* USER */}
         <div className="flex items-center gap-2">
-          {user?.avatar_url ? (
+          {shopLogo ? (
             <img
-              src={user.avatar_url}
-              alt="avatar"
+              src={shopLogo}
+              alt="logo cửa hàng"
               className="w-8 h-8 rounded-full object-cover border border-gray-200"
             />
           ) : (

@@ -5,7 +5,6 @@ import productApi from "../../api/productApi";
 const QUICK_PROMPTS = [
   "Ghế nào ngồi lâu không đau lưng?",
   "Có bàn nâng hạ dưới 5 triệu không?",
-  "So sánh 2 ghế này",
   "Sản phẩm nào bán chạy?",
 ];
 
@@ -23,6 +22,7 @@ export default function AIChatbox() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [imageMap, setImageMap] = useState({});
   const [isAuthed, setIsAuthed] = useState(
     Boolean(localStorage.getItem("token")),
   );
@@ -61,6 +61,7 @@ export default function AIChatbox() {
               rating_average: product.rating_average,
               sold: product.sold,
               category: product.category,
+              image: product.image,
             }))
             : [],
         },
@@ -130,6 +131,61 @@ export default function AIChatbox() {
     }
   }, [messages, isAuthed]);
 
+  useEffect(() => {
+    const idsToFetch = new Set();
+
+    messages.forEach((message) => {
+      if (!Array.isArray(message.products)) return;
+
+      message.products.forEach((item) => {
+        const productId = item.product_id || item.id;
+        if (!productId) return;
+        if (item.image) return;
+        if (imageMap[productId]) return;
+        idsToFetch.add(productId);
+      });
+    });
+
+    if (idsToFetch.size === 0) return;
+
+    let cancelled = false;
+
+    const fetchImages = async () => {
+      const results = await Promise.all(
+        Array.from(idsToFetch).map(async (productId) => {
+          try {
+            const res = await productApi.getById(productId);
+            const product = res?.data ?? res;
+            const image = Array.isArray(product?.images) && product.images.length > 0
+              ? product.images[0]
+              : product?.image_url || "";
+            return { productId, image };
+          } catch (error) {
+            return { productId, image: "" };
+          }
+        }),
+      );
+
+      if (cancelled) return;
+
+      setImageMap((prev) => {
+        const next = { ...prev };
+        results.forEach(({ productId, image }) => {
+          if (image && !next[productId]) {
+            next[productId] = image;
+          }
+        });
+        return next;
+      });
+    };
+
+    fetchImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, imageMap]);
+
   const suggestions = useMemo(() => QUICK_PROMPTS, []);
 
   const pushMessage = (message) =>
@@ -162,7 +218,7 @@ export default function AIChatbox() {
   return (
     <div className="fixed bottom-6 right-6 z-50 font-display">
       {open && (
-        <div className="mb-4 w-[340px] rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.6)]">
+        <div className="mb-4 w-[300px] max-w-[calc(100vw-2rem)] sm:w-[320px] md:w-[340px] rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.6)]">
           <div className="flex items-center justify-between rounded-t-3xl border-b border-slate-100 bg-slate-900 px-4 py-3 text-white">
             <div>
               <p className="text-sm font-semibold">AI Tư Vấn Nội Thất</p>
@@ -196,15 +252,32 @@ export default function AIChatbox() {
                       {message.products.slice(0, 4).map((item) => {
                         const productId = item.product_id || item.id;
                         if (!productId) return null;
+                        const imageUrl = item.image || imageMap[productId] || "";
 
                         return (
                           <Link
                             key={productId}
                             to={`/san-pham/${productId}`}
-                            className="block rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-700 transition hover:border-slate-200 hover:bg-white"
+                            className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-700 transition hover:border-slate-200 hover:bg-white"
                           >
-                            <p className="font-semibold text-slate-900">{item.name}</p>
-                            <p className="text-slate-600">{formatPrice(item.price)}</p>
+                            <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                              {imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900">{item.name}</p>
+                              <p className="text-slate-600">{formatPrice(item.price)}</p>
+                            </div>
                           </Link>
                         );
                       })}

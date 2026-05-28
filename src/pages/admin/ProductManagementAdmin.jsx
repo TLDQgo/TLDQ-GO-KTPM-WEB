@@ -3,7 +3,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-const API = "http://18.143.172.207:3000";
+const API = `${import.meta.env.VITE_API_URL || "http://18.143.172.207:3000"}/api`;
 
 export default function ProductManagementAdmin() {
   const [products, setProducts] = useState([]);

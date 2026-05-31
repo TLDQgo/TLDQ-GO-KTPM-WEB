@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosClient from "../../api/axiosClient";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-
-const API = `${import.meta.env.VITE_API_URL || "http://18.143.172.207:3000"}/api`;
 
 export default function ProductManagementAdmin() {
   const [products, setProducts] = useState([]);
@@ -22,19 +20,16 @@ export default function ProductManagementAdmin() {
     try {
       setLoading(true);
 
-      const res = await axios.get(`${API}/products/admin`, {
+      const res = await axiosClient.get("/products/admin", {
         params: {
           page: currentPage,
           keyword,
           status: filterStatus === "all" ? undefined : filterStatus,
         },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
       });
 
-      const items = res.data.items || [];
-      const pagination = res.data.pagination || {};
+      const items = res.items || [];
+      const pagination = res.pagination || {};
 
       const normalized = items.map((p) => ({
         ...p,
@@ -77,15 +72,7 @@ export default function ProductManagementAdmin() {
   // =========================
   const handleApprove = async (id) => {
     try {
-      await axios.patch(
-        `${API}/products/${id}/approve`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
+      await axiosClient.patch(`/products/${id}/approve`, {});
 
       fetchProducts(page);
     } catch (error) {
@@ -98,15 +85,7 @@ export default function ProductManagementAdmin() {
   // =========================
   const handleReject = async (id) => {
     try {
-      await axios.patch(
-        `${API}/products/${id}/reject`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
+      await axiosClient.patch(`/products/${id}/reject`, {});
 
       fetchProducts(page);
     } catch (error) {

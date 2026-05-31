@@ -12,9 +12,11 @@ function App() {
   return (
     <Router>
       <div className="p-0 w-full h-full ">
-        <Routes>{RoutesUser()}</Routes>
-        <Routes>{RoutesSeller()}</Routes>
-        <Routes>{RoutesAdmin()}</Routes>
+        <Routes>
+          {RoutesUser()}
+          {RoutesSeller()}
+          {RoutesAdmin()}
+        </Routes>
       </div>
       <AIChatbox />
       <ToastContainer autoClose={1500} />

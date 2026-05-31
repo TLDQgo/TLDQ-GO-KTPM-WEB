@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Zap } from "lucide-react";
 import Modal from "../components/common/Modal";
 import apiProduct from "../api/productApi";
 import ProductPrice from "../components/common/ProductPrice";
+import FlashSaleCountdown from "../components/common/FlashSaleCountdown";
 const categories = [
   {
     name: "Sofa Thư Giãn",
@@ -55,6 +57,7 @@ export default function Home() {
   const [gheProducts, setGheProducts] = useState([]);
   const [ghePage, setGhePage] = useState(1);
   const [gheTotalPages, setGheTotalPages] = useState(1);
+  const [flashSaleMap, setFlashSaleMap] = useState({});
 
   const handleOrder = (product, e) => {
     e.stopPropagation();
@@ -152,6 +155,25 @@ export default function Home() {
 
     fetchGhe();
   }, [ghePage]);
+
+  useEffect(() => {
+    const fetchFlashSales = async () => {
+      try {
+        const res = await apiProduct.getActiveFlashSales();
+        const sales = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        const map = {};
+        sales.forEach((fs) => {
+          const pid = fs.product_id?._id ?? fs.product_id;
+          if (pid) map[String(pid)] = fs;
+        });
+        setFlashSaleMap(map);
+      } catch (err) {
+        console.error("Lỗi load flash sale:", err);
+      }
+    };
+    fetchFlashSales();
+  }, []);
+
   return (
     <div className="min-h-screen p-4 ">
       {/* TOP SECTION */}
@@ -256,17 +278,27 @@ export default function Home() {
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {displayProducts.map((item) => (
+              {displayProducts.map((item) => {
+                const fs = flashSaleMap[String(item._id)];
+                return (
                 <div
                   key={item._id}
                   onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
-                  <img
-                    src={item.images?.[0] || "https://via.placeholder.com/150"}
-                    alt={item.name}
-                    className="object-cover w-full h-48"
-                  />
+                  <div className="relative">
+                    <img
+                      src={item.images?.[0] || "https://via.placeholder.com/150"}
+                      alt={item.name}
+                      className="object-cover w-full h-48"
+                    />
+                    {fs && (
+                      <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <Zap className="w-3 h-3 fill-white" />
+                        FLASH SALE
+                      </div>
+                    )}
+                  </div>
 
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-2">
@@ -274,10 +306,23 @@ export default function Home() {
                     </p>
 
                     <div className="mt-2">
-                      <ProductPrice product={item} />
+                      {fs ? (
+                        <div>
+                          <div className="flex flex-wrap items-end gap-1">
+                            <span className="text-xs text-gray-400 line-through">
+                              {Number(item.original_price ?? item.price ?? 0).toLocaleString("vi-VN")}đ
+                            </span>
+                            <span className="font-bold text-red-600">
+                              {Number(fs.sale_price).toLocaleString("vi-VN")}đ
+                            </span>
+                          </div>
+                          <FlashSaleCountdown endTime={fs.end_time} className="mt-1" />
+                        </div>
+                      ) : (
+                        <ProductPrice product={item} />
+                      )}
                     </div>
 
-                    {/* 🔥 THÊM DÒNG NÀY */}
                     <p className="text-xs text-gray-400 mt-1">
                       Đã bán: {item.sold || 0}
                     </p>
@@ -290,7 +335,8 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">
@@ -361,17 +407,27 @@ export default function Home() {
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {(categoryProducts || []).map((item) => (
+              {(categoryProducts || []).map((item) => {
+                const fs = flashSaleMap[String(item._id)];
+                return (
                 <div
                   key={item._id}
                   onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
-                  <img
-                    src={item.images?.[0] || "https://via.placeholder.com/150"}
-                    alt={item.name}
-                    className="object-cover w-full h-48"
-                  />
+                  <div className="relative">
+                    <img
+                      src={item.images?.[0] || "https://via.placeholder.com/150"}
+                      alt={item.name}
+                      className="object-cover w-full h-48"
+                    />
+                    {fs && (
+                      <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <Zap className="w-3 h-3 fill-white" />
+                        FLASH SALE
+                      </div>
+                    )}
+                  </div>
 
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-2">
@@ -379,8 +435,26 @@ export default function Home() {
                     </p>
 
                     <div className="mt-2">
-                      <ProductPrice product={item} />
+                      {fs ? (
+                        <div>
+                          <div className="flex flex-wrap items-end gap-1">
+                            <span className="text-xs text-gray-400 line-through">
+                              {Number(item.original_price ?? item.price ?? 0).toLocaleString("vi-VN")}đ
+                            </span>
+                            <span className="font-bold text-red-600">
+                              {Number(fs.sale_price).toLocaleString("vi-VN")}đ
+                            </span>
+                          </div>
+                          <FlashSaleCountdown endTime={fs.end_time} className="mt-1" />
+                        </div>
+                      ) : (
+                        <ProductPrice product={item} />
+                      )}
                     </div>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                      Đã bán: {item.sold || 0}
+                    </p>
 
                     <button
                       onClick={(e) => handleOrder(item, e)}
@@ -390,7 +464,8 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">
@@ -462,25 +537,53 @@ export default function Home() {
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {(gheProducts || []).map((item) => (
+              {(gheProducts || []).map((item) => {
+                const fs = flashSaleMap[String(item._id)];
+                return (
                 <div
                   key={item._id}
                   onClick={() => navigate(`/san-pham/${item._id}`)}
                   className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                 >
-                  <img
-                    src={item.images?.[0] || "https://via.placeholder.com/150"}
-                    alt={item.name}
-                    className="object-cover w-full h-48"
-                  />
+                  <div className="relative">
+                    <img
+                      src={item.images?.[0] || "https://via.placeholder.com/150"}
+                      alt={item.name}
+                      className="object-cover w-full h-48"
+                    />
+                    {fs && (
+                      <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <Zap className="w-3 h-3 fill-white" />
+                        FLASH SALE
+                      </div>
+                    )}
+                  </div>
 
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-2">
                       {item.name}
                     </p>
 
-                    <p className="mt-2 font-bold text-red-500">
-                      {item.price?.toLocaleString("vi-VN")}đ
+                    <div className="mt-2">
+                      {fs ? (
+                        <div>
+                          <div className="flex flex-wrap items-end gap-1">
+                            <span className="text-xs text-gray-400 line-through">
+                              {Number(item.original_price ?? item.price ?? 0).toLocaleString("vi-VN")}đ
+                            </span>
+                            <span className="font-bold text-red-600">
+                              {Number(fs.sale_price).toLocaleString("vi-VN")}đ
+                            </span>
+                          </div>
+                          <FlashSaleCountdown endTime={fs.end_time} className="mt-1" />
+                        </div>
+                      ) : (
+                        <ProductPrice product={item} />
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                      Đã bán: {item.sold || 0}
                     </p>
 
                     <button
@@ -491,7 +594,8 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <div className="flex items-center justify-center gap-2 mt-6">

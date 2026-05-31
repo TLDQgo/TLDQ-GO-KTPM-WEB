@@ -51,7 +51,7 @@ axiosClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     // #region debug-log
     if (error.config) {
       console.log("[API Error]", error.config.method?.toUpperCase(), error.config.url);
@@ -59,6 +59,16 @@ axiosClient.interceptors.response.use(
       console.log("[API Error]", error.message);
     }
     // #endregion
+
+    // Retry cho 5xx và network error
+    const config = error.config;
+    const isRetryable = !error.response || error.response.status >= 500;
+    if (config && isRetryable && (config._retryCount || 0) < 3) {
+      config._retryCount = (config._retryCount || 0) + 1;
+      await new Promise((r) => setTimeout(r, config._retryCount * 3000));
+      return axiosClient(config);
+    }
+
     throw error;
   }
 );

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Star, ChevronLeft, ShoppingBag, Store, Package } from "lucide-react";
+import { Star, ChevronLeft, ShoppingBag, Store, Package, Camera, X } from "lucide-react";
 import productApi from "../api/productApi";
 import authApi from "../api/authApi";
 import cartApi from "../api/cartApi";
@@ -39,7 +39,8 @@ function StarRating({ value = 0, max = 5, onChange }) {
 }
 
 function ReviewCard({ review }) {
-  const initial = (review.user_id || "?")[0].toUpperCase();
+  const displayName = review.user_name || "Khách hàng";
+  const initial = displayName[0].toUpperCase();
   const date = review.createdAt
     ? new Date(review.createdAt).toLocaleDateString("vi-VN")
     : "";
@@ -52,13 +53,26 @@ function ReviewCard({ review }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between flex-wrap gap-1">
             <span className="text-sm font-semibold text-gray-800 truncate">
-              {review.user_id}
+              {displayName}
             </span>
             <span className="text-xs text-gray-400">{date}</span>
           </div>
           <StarRating value={review.rating} />
           {review.comment && (
             <p className="mt-2 text-sm text-gray-700">{review.comment}</p>
+          )}
+          {review.images?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {review.images.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Ảnh đánh giá ${i + 1}`}
+                  className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
+                  onClick={() => window.open(url, "_blank")}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -77,6 +91,8 @@ export default function ProductDetail() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
+  const [reviewImages, setReviewImages] = useState([]);
+  const reviewImageRef = useRef(null);
 
   const {
     data: productData,
@@ -127,11 +143,12 @@ export default function ProductDetail() {
   const flashSale = flashSaleData?.data ?? null;
 
   const reviewMutation = useMutation({
-    mutationFn: (data) => productApi.createReview(id, data),
+    mutationFn: (formData) => productApi.createReview(id, formData),
     onSuccess: () => {
       toast.success("Đánh giá của bạn đã được gửi!");
       setReviewRating(5);
       setReviewComment("");
+      setReviewImages([]);
       queryClient.invalidateQueries({ queryKey: ["reviews", id] });
       queryClient.invalidateQueries({ queryKey: ["product", id] });
     },
@@ -182,17 +199,27 @@ export default function ProductDetail() {
     }
   };
 
+  const handleReviewImageSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    const valid = files.filter((f) => f.type.startsWith("image/"));
+    if (valid.length !== files.length) toast.warning("Chỉ chấp nhận file ảnh");
+    setReviewImages((prev) => [...prev, ...valid].slice(0, 5));
+    e.target.value = "";
+  };
+
   const handleSubmitReview = (e) => {
     e.preventDefault();
     if (!user) {
       toast.warning("Vui lòng đăng nhập để đánh giá!");
       return;
     }
-    reviewMutation.mutate({
-      user_id: user._id || user.id,
-      rating: reviewRating,
-      comment: reviewComment,
-    });
+    const fd = new FormData();
+    fd.append("user_id", user._id || user.id);
+    fd.append("user_name", user.name || user.email?.split("@")[0] || "Khách hàng");
+    fd.append("rating", reviewRating);
+    fd.append("comment", reviewComment);
+    reviewImages.forEach((f) => fd.append("images", f));
+    reviewMutation.mutate(fd);
   };
 
   if (productLoading) {
@@ -456,7 +483,7 @@ export default function ProductDetail() {
               )}
             </div>
             <Link
-              to={`/?seller=${product.seller_id}`}
+              to={`/cua-hang/${product.seller_id}`}
               className="shrink-0 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
             >
               Xem shop
@@ -506,10 +533,55 @@ export default function ProductDetail() {
                 rows={3}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 resize-none"
               />
+
+              {/* Image upload */}
+              <div className="mt-3">
+                <input
+                  ref={reviewImageRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleReviewImageSelect}
+                />
+                {reviewImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => reviewImageRef.current?.click()}
+                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition border border-dashed border-gray-300 hover:border-blue-400 rounded-lg px-3 py-1.5"
+                  >
+                    <Camera size={16} />
+                    Thêm ảnh ({reviewImages.length}/5)
+                  </button>
+                )}
+                {reviewImages.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {reviewImages.map((file, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${i + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setReviewImages((prev) => prev.filter((_, idx) => idx !== i))
+                          }
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 disabled={reviewMutation.isPending}
-                className="mt-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition"
+                className="mt-3 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition"
               >
                 {reviewMutation.isPending ? "Đang gửi..." : "Gửi đánh giá"}
               </button>

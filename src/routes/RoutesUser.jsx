@@ -15,6 +15,7 @@ import LoginSeller from "../pages/LoginSeller";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import ChangePassword from "../pages/ChangePassword";
+import ShopPage from "../pages/ShopPage";
 import useAuthStore from "../store/useAuthStore";
 
 function UserPrivateRoute({ children }) {
@@ -33,6 +34,7 @@ export default function RoutesUser() {
       <Route path="/san-pham/:id" element={<UserLayout><ProductDetail /></UserLayout>} />
       <Route path="/gio-hang" element={<UserLayout><Cart /></UserLayout>} />
       <Route path="/tim-kiem" element={<UserLayout><SearchResults /></UserLayout>} />
+      <Route path="/cua-hang/:sellerId" element={<UserLayout><ShopPage /></UserLayout>} />
       <Route path="/register" element={<UserLayout><Register /></UserLayout>} />
       <Route path="/login" element={<UserLayout><Login /></UserLayout>} />
       <Route path="/register-seller" element={<UserLayout><RegisterSeller /></UserLayout>} />

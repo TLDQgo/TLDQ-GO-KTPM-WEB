@@ -59,8 +59,10 @@ const productApi = {
 
   getReviews: (productId) => axiosClient.get(`/products/${productId}/reviews`),
 
-  createReview: (productId, data) =>
-    axiosClient.post(`/products/${productId}/reviews`, data),
+  createReview: (productId, formData) =>
+    axiosClient.post(`/products/${productId}/reviews`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 
   // Flash Sale
   getActiveFlashSales: () => axiosClient.get("/products/flash-sales/active"),
@@ -72,6 +74,9 @@ const productApi = {
 
   aiChat: (payload) => axiosClient.post("/products/ai/chat", payload),
   aiHistory: () => axiosClient.get("/products/ai/history"),
+
+  getSellerReviews: (sellerId, page = 1) =>
+    axiosClient.get(`/products/seller/${sellerId}/reviews`, { params: { page } }),
 };
 
 export default productApi;

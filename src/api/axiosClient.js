@@ -68,6 +68,14 @@ axiosClient.interceptors.response.use(
       window.location.href = "/login";
     }
 
+    // Retry cho 5xx và network error (timeout, offline)
+    const isRetryable = !error.response || error.response.status >= 500;
+    if (isRetryable && (originalRequest._retryCount || 0) < 3) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      await new Promise((r) => setTimeout(r, originalRequest._retryCount * 3000));
+      return axiosClient(originalRequest);
+    }
+
     throw error;
   }
 );

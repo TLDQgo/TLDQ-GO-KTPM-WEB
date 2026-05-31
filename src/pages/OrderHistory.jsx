@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import { ChevronDown, ChevronUp, ShoppingBag, Package } from "lucide-react";
 import orderApi from "../api/orderApi";
 
@@ -47,7 +48,9 @@ const PAYMENT_STATUS_LABEL = {
   failed: { label: "Thất bại", color: "text-red-600" },
 };
 
-function OrderCard({ order }) {
+const CANCELLABLE_STATUSES = ["pending", "awaiting_payment"];
+
+function OrderCard({ order, onCancel, isCancelling }) {
   const [open, setOpen] = useState(false);
   const status = STATUS_LABEL[order.status] ?? {
     label: order.status,
@@ -160,6 +163,19 @@ function OrderCard({ order }) {
               {formatPrice(order.total_amount)}
             </span>
           </div>
+
+          {/* Cancel button */}
+          {CANCELLABLE_STATUSES.includes(order.status) && (
+            <div className="flex justify-end border-t pt-3">
+              <button
+                onClick={() => onCancel(order._id)}
+                disabled={isCancelling}
+                className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-60 transition"
+              >
+                {isCancelling ? "Đang hủy..." : "Huỷ đơn hàng"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -171,6 +187,7 @@ const FILTER_TABS = [
   { key: "awaiting_payment", label: "Chờ thanh toán" },
   { key: "pending", label: "Chờ xác nhận" },
   { key: "confirmed", label: "Đã xác nhận" },
+  { key: "preparing", label: "Đang đóng gói" },
   { key: "delivering", label: "Đang giao" },
   { key: "completed", label: "Hoàn thành" },
   { key: "cancelled", label: "Đã huỷ" },
@@ -178,6 +195,7 @@ const FILTER_TABS = [
 
 export default function OrderHistory() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
 
   const user = (() => {
@@ -193,6 +211,22 @@ export default function OrderHistory() {
     queryFn: () => orderApi.getOrdersByCustomer(user._id),
     enabled: !!user?._id,
   });
+
+  const cancelMutation = useMutation({
+    mutationFn: (orderId) => orderApi.cancelOrderByCustomer(orderId, user._id),
+    onSuccess: () => {
+      toast.success("Đã hủy đơn hàng thành công");
+      queryClient.invalidateQueries(["customerOrders", user._id]);
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message ?? "Hủy đơn hàng thất bại");
+    },
+  });
+
+  const handleCancelOrder = (orderId) => {
+    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này không?")) return;
+    cancelMutation.mutate(orderId);
+  };
 
   const orders = data?.data ?? [];
 
@@ -274,7 +308,12 @@ export default function OrderHistory() {
       ) : (
         <div className="space-y-4">
           {filtered.map((order) => (
-            <OrderCard key={order._id} order={order} />
+            <OrderCard
+              key={order._id}
+              order={order}
+              onCancel={handleCancelOrder}
+              isCancelling={cancelMutation.isPending && cancelMutation.variables === order._id}
+            />
           ))}
         </div>
       )}

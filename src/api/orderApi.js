@@ -31,6 +31,9 @@ const orderApi = {
     return orderApiClient.get(`/orders/admin/stats?period=${period}`);
   },
 
+  cancelOrderByCustomer: (orderId, customerId) =>
+    orderApiClient.post(`/orders/${orderId}/cancel`, { customer_id: customerId }),
+
   createOrder: (data) => orderApiClient.post("/orders", data),
 
   getOrdersByCustomer: (customerId) =>

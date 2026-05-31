@@ -290,16 +290,29 @@ function OrderDetailModal({ order, onClose, onUpdateStatus, isPending }) {
             </>
           )}
           {order.status === "delivering" && (
-            <button
-              onClick={() => {
-                onUpdateStatus(order._id, "completed");
-                onClose();
-              }}
-              disabled={isPending}
-              className="px-4 py-2 text-sm font-medium text-white transition bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-60"
-            >
-              Giao thành công
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  onUpdateStatus(order._id, "completed");
+                  onClose();
+                }}
+                disabled={isPending}
+                className="px-4 py-2 text-sm font-medium text-white transition bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-60"
+              >
+                Giao thành công
+              </button>
+              <button
+                onClick={() => {
+                  if (!window.confirm("Xác nhận khách không nhận hàng? Đơn hàng sẽ bị hủy và tồn kho được hoàn lại.")) return;
+                  onUpdateStatus(order._id, "cancelled");
+                  onClose();
+                }}
+                disabled={isPending}
+                className="px-4 py-2 text-sm font-medium text-red-600 transition border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-60"
+              >
+                Khách không nhận
+              </button>
+            </>
           )}
           <button
             onClick={onClose}

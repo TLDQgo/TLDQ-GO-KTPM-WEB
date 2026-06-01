@@ -8,10 +8,7 @@ import {
   ShoppingCart,
   BarChart2,
   Tag,
-  Truck,
-  Wallet,
   Settings,
-  HelpCircle,
   LogOut,
   Zap,
 } from "lucide-react";
@@ -121,34 +118,6 @@ export default function SidebarSeller() {
           </li>
         </Link>
 
-        <Link to="/seller/shipping">
-          <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
-              activeItem === "shipping"
-                ? "bg-red-50 text-red-500"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            onClick={() => handleItemClick("shipping")}
-          >
-            <Truck size={18} />
-            <span>Kho & vận chuyển</span>
-          </li>
-        </Link>
-
-        <Link to="/seller/finance">
-          <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
-              activeItem === "finance"
-                ? "bg-red-50 text-red-500"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            onClick={() => handleItemClick("finance")}
-          >
-            <Wallet size={18} />
-            <span>Tài chính</span>
-          </li>
-        </Link>
-
         <Link to="/seller/settings">
           <li
             className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
@@ -160,20 +129,6 @@ export default function SidebarSeller() {
           >
             <Settings size={18} />
             <span>Cài đặt Shop</span>
-          </li>
-        </Link>
-
-        <Link to="/seller/support">
-          <li
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${
-              activeItem === "support"
-                ? "bg-red-50 text-red-500"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            onClick={() => handleItemClick("support")}
-          >
-            <HelpCircle size={18} />
-            <span>Hỗ trợ</span>
           </li>
         </Link>
 

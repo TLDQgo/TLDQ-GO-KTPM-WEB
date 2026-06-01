@@ -19,6 +19,20 @@ function formatDT(dt) {
   return dt ? new Date(dt).toLocaleString("vi-VN") : "";
 }
 
+// Chuyển UTC timestamp → giá trị local cho input datetime-local
+function toInputDatetime(utcStr) {
+  if (!utcStr) return "";
+  const d = new Date(utcStr);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+// Chuyển giá trị datetime-local (local time) → ISO UTC string để gửi backend
+function toISOString(localStr) {
+  return localStr ? new Date(localStr).toISOString() : "";
+}
+
 export default function FlashSaleManagement() {
   const user = useAuthStore((s) => s.user);
   const sellerId = user?._id;
@@ -39,8 +53,8 @@ export default function FlashSaleManagement() {
     setEditingId(fs._id);
     setEditForm({
       sale_price: fs.sale_price,
-      start_time: fs.start_time ? new Date(fs.start_time).toISOString().slice(0, 16) : "",
-      end_time: fs.end_time ? new Date(fs.end_time).toISOString().slice(0, 16) : "",
+      start_time: toInputDatetime(fs.start_time),
+      end_time: toInputDatetime(fs.end_time),
       quantity_limit: fs.quantity_limit ?? 0,
     });
   };
@@ -114,7 +128,14 @@ export default function FlashSaleManagement() {
       toast.warning("Vui lòng điền đầy đủ thông tin");
       return;
     }
-    updateMutation.mutate({ id, data: editForm });
+    updateMutation.mutate({
+      id,
+      data: {
+        ...editForm,
+        start_time: toISOString(editForm.start_time),
+        end_time: toISOString(editForm.end_time),
+      },
+    });
   };
 
   const handleSubmit = (e) => {
@@ -123,7 +144,12 @@ export default function FlashSaleManagement() {
       toast.warning("Vui lòng điền đầy đủ thông tin");
       return;
     }
-    createMutation.mutate({ ...form, seller_id: sellerId });
+    createMutation.mutate({
+      ...form,
+      seller_id: sellerId,
+      start_time: toISOString(form.start_time),
+      end_time: toISOString(form.end_time),
+    });
   };
 
   const selectedProduct = products.find((p) => p._id === form.product_id);

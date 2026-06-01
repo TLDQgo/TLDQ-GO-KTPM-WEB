@@ -47,6 +47,8 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingCategory, setLoadingCategory] = useState(false);
+  const [loadingGhe, setLoadingGhe] = useState(false);
   const [isBestSeller, setIsBestSeller] = useState(false); // 🔥 thêm
   // Modal states
   const [selectedProductForDetails, setSelectedProductForDetails] =
@@ -58,6 +60,9 @@ export default function Home() {
   const [ghePage, setGhePage] = useState(1);
   const [gheTotalPages, setGheTotalPages] = useState(1);
   const [flashSaleMap, setFlashSaleMap] = useState({});
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalCategoryProducts, setTotalCategoryProducts] = useState(0);
+  const [totalGheProducts, setTotalGheProducts] = useState(0);
 
   const handleOrder = (product, e) => {
     e.stopPropagation();
@@ -92,6 +97,7 @@ export default function Home() {
         if (res && res.data) {
           setProducts(res.data);
           setTotalPages(res.pagination.totalPages);
+          setTotalProducts(res.pagination.totalItems || 0);
         }
       } catch (error) {
         console.error("Fetch products error:", error);
@@ -110,7 +116,7 @@ export default function Home() {
   useEffect(() => {
     const fetchCategoryProducts = async () => {
       try {
-        setLoading(true);
+        setLoadingCategory(true);
 
         const res = await apiProduct.getProductsByCategoryName(
           "Bàn Học",
@@ -120,12 +126,13 @@ export default function Home() {
         if (res && res.data) {
           setCategoryProducts(res.data || []);
           setCategoryTotalPages(res.pagination?.totalPages || 1);
+          setTotalCategoryProducts(res.pagination?.totalItems || 0);
         }
       } catch (error) {
         console.error("Fetch category products error:", error);
         setCategoryProducts([]);
       } finally {
-        setLoading(false);
+        setLoadingCategory(false);
       }
     };
 
@@ -135,7 +142,7 @@ export default function Home() {
   useEffect(() => {
     const fetchGhe = async () => {
       try {
-        setLoading(true);
+        setLoadingGhe(true);
 
         const res = await apiProduct.getProductsByCategoryName(
           "Ghế công thái học",
@@ -145,11 +152,12 @@ export default function Home() {
         if (res) {
           setGheProducts(res.data || []);
           setGheTotalPages(res.pagination?.totalPages || 1);
+          setTotalGheProducts(res.pagination?.totalItems || 0);
         }
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        setLoadingGhe(false);
       }
     };
 
@@ -254,8 +262,8 @@ export default function Home() {
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
-            BÀN HỌC THÔNG MINH
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            SẢN PHẨM NỔI BẬT
+            {totalProducts > 0 && <span className="ml-2 text-sm text-gray-500">({totalProducts} sản phẩm)</span>}
           </h2>
 
           <div className="flex gap-2">
@@ -392,7 +400,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
             BÀN HỌC THÔNG MINH
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            {totalCategoryProducts > 0 && <span className="ml-2 text-sm text-gray-500">({totalCategoryProducts} sản phẩm)</span>}
           </h2>
 
           <div className="flex gap-2">
@@ -403,7 +411,7 @@ export default function Home() {
         </div>
         {/* sản phẩm 2 lấy theo danh mục*/}
         <div>
-          {loading ? (
+          {loadingCategory ? (
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -479,7 +487,7 @@ export default function Home() {
             </button>
 
             {/* PAGE */}
-            {[...Array(totalPages)].map((_, i) => (
+            {[...Array(categoryTotalPages)].map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCategoryPage(i + 1)}
@@ -492,7 +500,7 @@ export default function Home() {
 
             {/* NEXT */}
             <button
-              disabled={categoryPage === totalPages}
+              disabled={categoryPage === categoryTotalPages}
               onClick={() => setCategoryPage(categoryPage + 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
@@ -522,7 +530,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="pb-2 text-xl font-bold border-b-2 border-blue-500">
             GHẾ CÔNG THÁI HỌC
-            <span className="ml-2 text-sm text-gray-500">(44 sản phẩm)</span>
+            {totalGheProducts > 0 && <span className="ml-2 text-sm text-gray-500">({totalGheProducts} sản phẩm)</span>}
           </h2>
 
           <div className="flex gap-2">
@@ -533,7 +541,7 @@ export default function Home() {
         </div>
         {/* sản phẩm 3 lấy theo danh mục*/}
         <div>
-          {loading ? (
+          {loadingGhe ? (
             <p className="text-center">Đang tải...</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -609,7 +617,7 @@ export default function Home() {
             </button>
 
             {/* PAGE */}
-            {[...Array(totalPages)].map((_, i) => (
+            {[...Array(gheTotalPages)].map((_, i) => (
               <button
                 key={i}
                 onClick={() => setGhePage(i + 1)}
@@ -622,7 +630,7 @@ export default function Home() {
 
             {/* NEXT */}
             <button
-              disabled={ghePage === totalPages}
+              disabled={ghePage === gheTotalPages}
               onClick={() => setGhePage(ghePage + 1)}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >

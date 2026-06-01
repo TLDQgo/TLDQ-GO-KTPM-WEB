@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Search } from "lucide-react";
+import { Search, Zap } from "lucide-react";
 import productApi from "../api/productApi";
 import ProductPrice from "../components/common/ProductPrice";
+import FlashSaleCountdown from "../components/common/FlashSaleCountdown";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Mới nhất" },
@@ -44,6 +45,19 @@ export default function SearchResults() {
 
   const products = data?.data ?? [];
   const pagination = data?.pagination ?? {};
+
+  const [flashSaleMap, setFlashSaleMap] = useState({});
+  useEffect(() => {
+    productApi.getActiveFlashSales().then((res) => {
+      const sales = Array.isArray(res?.data) ? res.data : [];
+      const map = {};
+      sales.forEach((fs) => {
+        const pid = fs.product_id?._id ?? fs.product_id;
+        if (pid) map[String(pid)] = fs;
+      });
+      setFlashSaleMap(map);
+    }).catch(() => {});
+  }, []);
 
   const updateParams = (updates) => {
     const next = new URLSearchParams(searchParams);
@@ -215,22 +229,47 @@ export default function SearchResults() {
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products.map((item) => (
+                {products.map((item) => {
+                  const fs = flashSaleMap[String(item._id)];
+                  return (
                   <div
                     key={item._id}
                     onClick={() => navigate(`/san-pham/${item._id}`)}
                     className="overflow-hidden transition bg-white shadow cursor-pointer rounded-xl hover:shadow-lg"
                   >
-                    <img
-                      src={item.images?.[0] || "https://via.placeholder.com/150"}
-                      alt={item.name}
-                      className="object-cover w-full h-48"
-                    />
+                    <div className="relative">
+                      <img
+                        src={item.images?.[0] || "https://via.placeholder.com/150"}
+                        alt={item.name}
+                        className="object-cover w-full h-48"
+                      />
+                      {fs && (
+                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          <Zap className="w-3 h-3 fill-white" />
+                          FLASH SALE
+                        </div>
+                      )}
+                    </div>
                     <div className="p-3">
                       <p className="text-sm font-medium line-clamp-2">{item.name}</p>
                       <div className="mt-2">
-                        <ProductPrice product={item} className="text-sm" showBadge={false} />
+                        {fs ? (
+                          <div>
+                            <div className="flex flex-wrap items-end gap-1">
+                              <span className="text-xs text-gray-400 line-through">
+                                {Number(item.original_price ?? item.price ?? 0).toLocaleString("vi-VN")}đ
+                              </span>
+                              <span className="font-bold text-red-600">
+                                {Number(fs.sale_price).toLocaleString("vi-VN")}đ
+                              </span>
+                            </div>
+                            <FlashSaleCountdown endTime={fs.end_time} className="mt-1" />
+                          </div>
+                        ) : (
+                          <ProductPrice product={item} />
+                        )}
                       </div>
+                      <p className="text-xs text-gray-400 mt-1">Đã bán: {item.sold || 0}</p>
                       <button
                         onClick={(e) => handleOrder(item, e)}
                         className="w-full py-1 mt-3 text-xs border rounded-lg hover:bg-blue-500 hover:text-white transition"
@@ -239,7 +278,8 @@ export default function SearchResults() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* PAGINATION */}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Rocket } from "lucide-react";
+import { CheckCircle, Clock, Eye, EyeOff, Loader2, Rocket, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import authApi from "../api/authApi";
 import useAuthStore from "../store/useAuthStore";
@@ -13,6 +13,7 @@ export default function RegisterSeller() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const isCustomerLoggedIn = user?.role === "customer";
+  const upgradeStatus = user?.seller_upgrade_status;
 
   const [form, setForm] = useState({
     personalName: user?.full_name || "",
@@ -74,14 +75,9 @@ export default function RegisterSeller() {
           shop_name: normalizedShopName,
           address_line: normalizedAddressLine,
         });
-        if (res?.token) {
-          localStorage.setItem("token", res.token);
-          if (res.refreshToken) localStorage.setItem("refreshToken", res.refreshToken);
-        }
         if (res?.user) setUser(res.user);
-        window.dispatchEvent(new Event("auth-change"));
-        toast.success(res?.message || "Nâng cấp tài khoản seller thành công!");
-        navigate("/seller/settings?from=register");
+        toast.info("Yêu cầu đã được gửi! Vui lòng chờ admin xem xét và phê duyệt.");
+        navigate("/profile");
         return;
       }
 
@@ -103,6 +99,59 @@ export default function RegisterSeller() {
       setSubmitting(false);
     }
   };
+
+  // Customer đang chờ duyệt — hiển thị màn hình pending
+  if (isCustomerLoggedIn && upgradeStatus === "pending") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-10 text-center">
+          <div className="flex justify-center mb-4">
+            <Clock className="w-16 h-16 text-orange-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Đang chờ phê duyệt</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Yêu cầu nâng cấp Seller của bạn đã được gửi. Admin sẽ xem xét và phê duyệt trong thời gian sớm nhất.
+          </p>
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition"
+          >
+            Về trang cá nhân
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Customer bị từ chối — hiển thị lý do và cho phép nộp lại
+  if (isCustomerLoggedIn && upgradeStatus === "rejected") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-10 text-center">
+          <div className="flex justify-center mb-4">
+            <XCircle className="w-16 h-16 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Yêu cầu bị từ chối</h2>
+          {user?.seller_upgrade_reject_reason && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mb-4">
+              Lý do: {user.seller_upgrade_reject_reason}
+            </p>
+          )}
+          <p className="text-sm text-gray-500 mb-6">
+            Bạn có thể điều chỉnh thông tin và nộp lại yêu cầu.
+          </p>
+          <button
+            onClick={() => {
+              setUser({ ...user, seller_upgrade_status: "none", seller_upgrade_reject_reason: undefined });
+            }}
+            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition"
+          >
+            Nộp lại yêu cầu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
@@ -128,12 +177,12 @@ export default function RegisterSeller() {
             {isCustomerLoggedIn ? "Nâng cấp tài khoản Seller" : "Đăng ký Seller"}
           </h1>
           <p className="text-sm text-gray-500 text-center mb-5">
-            {isCustomerLoggedIn ? "Cập nhật thông tin để nâng cấp trực tiếp lên Seller" : "Điền thông tin để tạo cửa hàng của bạn"}
+            {isCustomerLoggedIn ? "Điền thông tin để gửi yêu cầu nâng cấp lên Seller" : "Điền thông tin để tạo cửa hàng của bạn"}
           </p>
 
           {isCustomerLoggedIn && (
             <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-              Bạn đang đăng nhập với tài khoản khách hàng. Chỉ cần cập nhật thông tin bên dưới để nâng cấp lên Seller.
+              Yêu cầu sẽ được admin xem xét trước khi tài khoản được nâng cấp.
             </div>
           )}
 

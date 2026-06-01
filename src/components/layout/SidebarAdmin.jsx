@@ -5,13 +5,14 @@ import {
   Users,
   BarChart2,
   Package,
-  ShoppingBag,
+  Store,
   LogOut,
 } from "lucide-react";
 
 const NAV = [
   { key: "/admin", label: "Tổng quan", icon: LayoutDashboard, exact: true },
   { key: "/admin/users", label: "Quản lý người dùng", icon: Users },
+  { key: "/admin/seller-requests", label: "Yêu cầu Seller", icon: Store },
   { key: "/admin/quan-ly-san-pham", label: "Quản lý sản phẩm", icon: Package },
   { key: "/admin/stats", label: "Thống kê hệ thống", icon: BarChart2 },
 ];

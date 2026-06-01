@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import productApi from "../../api/productApi";
 
 const QUICK_PROMPTS = [
@@ -18,6 +18,7 @@ const formatPrice = (value) =>
   }).format(Number(value || 0));
 
 export default function AIChatbox() {
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -214,6 +215,8 @@ export default function AIChatbox() {
       setLoading(false);
     }
   };
+
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-display">

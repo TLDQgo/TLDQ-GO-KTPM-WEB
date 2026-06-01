@@ -5,6 +5,7 @@ import UserManagement from "../pages/admin/UserManagement";
 import SystemStats from "../pages/admin/SystemStats";
 import LoginAdmin from "../pages/admin/LoginAdmin";
 import ProductManagementAdmin from "../pages/admin/ProductManagementAdmin";
+import SellerRequests from "../pages/admin/SellerRequests";
 import useAuthStore from "../store/useAuthStore";
 
 function AdminPrivateRoute({ children }) {
@@ -56,6 +57,16 @@ export default function RoutesAdmin() {
           <AdminPrivateRoute>
             <AdminLayout>
               <SystemStats />
+            </AdminLayout>
+          </AdminPrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/seller-requests"
+        element={
+          <AdminPrivateRoute>
+            <AdminLayout>
+              <SellerRequests />
             </AdminLayout>
           </AdminPrivateRoute>
         }

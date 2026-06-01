@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   Camera,
+  Clock,
   KeyRound,
   Mail,
   MapPin,
@@ -11,6 +12,7 @@ import {
   ShieldCheck,
   Store,
   UserRound,
+  XCircle,
 } from "lucide-react";
 import authApi from "../api/authApi";
 import useAuthStore from "../store/useAuthStore";
@@ -350,6 +352,27 @@ export default function Profile() {
                 <Store className="h-4 w-4" />
                 Quay lại cửa hàng
               </Link>
+            ) : user?.seller_upgrade_status === "pending" ? (
+              <div className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-orange-50 border border-orange-300 px-6 py-3 text-sm font-semibold text-orange-600 sm:w-auto sm:min-w-[190px]">
+                <Clock className="h-4 w-4" />
+                Đang chờ phê duyệt
+              </div>
+            ) : user?.seller_upgrade_status === "rejected" ? (
+              <div className="flex flex-col gap-1 sm:w-auto sm:min-w-[190px]">
+                <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 border border-red-300 px-6 py-2 text-sm font-semibold text-red-600">
+                  <XCircle className="h-4 w-4 shrink-0" />
+                  Yêu cầu bị từ chối
+                </div>
+                {user?.seller_upgrade_reject_reason && (
+                  <p className="text-xs text-red-500 text-center">{user.seller_upgrade_reject_reason}</p>
+                )}
+                <Link
+                  to="/register-seller"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-2 text-sm font-bold text-white hover:bg-orange-600 transition"
+                >
+                  Nộp lại yêu cầu
+                </Link>
+              </div>
             ) : (
               <Link
                 to="/register-seller"

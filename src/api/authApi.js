@@ -59,6 +59,14 @@ const authApi = {
   adminUpdateUser: (id, data) => axiosClient.put(`users/admin/users/${id}`, data),
   adminDeleteUser: (id) => axiosClient.delete(`users/admin/users/${id}`),
   adminCreateUser: (data) => axiosClient.post("users/admin/users", data),
+
+  // Admin — seller upgrade requests
+  adminListSellerRequests: (params) =>
+    axiosClient.get("users/admin/seller-requests", { params }),
+  adminApproveSellerUpgrade: (id) =>
+    axiosClient.post(`users/admin/seller-requests/${id}/approve`),
+  adminRejectSellerUpgrade: (id, data) =>
+    axiosClient.post(`users/admin/seller-requests/${id}/reject`, data),
 };
 
 export default authApi;
